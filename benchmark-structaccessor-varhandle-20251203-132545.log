@@ -1,0 +1,510 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as configuration cache cannot be reused due to --refresh-dependencies
+> Task :benchmarks:processResources NO-SOURCE
+> Task :roray-ffm-utils:lib:processResources NO-SOURCE
+> Task :benchmarks:processTestResources NO-SOURCE
+> Task :benchmarks:processJmhResources NO-SOURCE
+> Task :lib:processResources NO-SOURCE
+> Task :myra-server:processResources NO-SOURCE
+> Task :roray-ffm-utils:lib:compileJava UP-TO-DATE
+> Task :roray-ffm-utils:lib:classes UP-TO-DATE
+> Task :lib:compileJava UP-TO-DATE
+> Task :lib:classes UP-TO-DATE
+> Task :lib:jar UP-TO-DATE
+> Task :roray-ffm-utils:lib:jar UP-TO-DATE
+> Task :myra-server:compileJava UP-TO-DATE
+> Task :myra-server:classes UP-TO-DATE
+> Task :myra-server:jar UP-TO-DATE
+> Task :benchmarks:compileJava NO-SOURCE
+> Task :benchmarks:classes UP-TO-DATE
+> Task :benchmarks:compileTestJava NO-SOURCE
+> Task :benchmarks:testClasses UP-TO-DATE
+> Task :benchmarks:compileJmhJava
+> Task :benchmarks:jmhClasses
+> Task :benchmarks:jmhRunBytecodeGenerator
+> Task :benchmarks:jmhCompileGeneratedClasses
+> Task :benchmarks:jmhJar
+
+> Task :benchmarks:jmh
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.directVarHandle_getSingleField
+
+# Run progress: 0.00% complete, ETA 00:07:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_getSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_directVarHandle_getSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_getSingleField_jmhTest.directVarHandle_getSingleField_SampleTime(StructAccessorBenchmark_directVarHandle_getSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.directVarHandle_prepSend
+
+# Run progress: 8.33% complete, ETA 00:00:03
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_prepSend_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_directVarHandle_prepSend_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_prepSend_jmhTest.directVarHandle_prepSend_SampleTime(StructAccessorBenchmark_directVarHandle_prepSend_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.directVarHandle_readFields
+
+# Run progress: 16.67% complete, ETA 00:00:03
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_readFields_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_directVarHandle_readFields_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_readFields_jmhTest.directVarHandle_readFields_SampleTime(StructAccessorBenchmark_directVarHandle_readFields_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.directVarHandle_setSingleField
+
+# Run progress: 25.00% complete, ETA 00:00:02
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_setSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_directVarHandle_setSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_directVarHandle_setSingleField_jmhTest.directVarHandle_setSingleField_SampleTime(StructAccessorBenchmark_directVarHandle_setSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessorVarHandle_getSingleField
+
+# Run progress: 33.33% complete, ETA 00:00:02
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_getSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessorVarHandle_getSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_getSingleField_jmhTest.structAccessorVarHandle_getSingleField_SampleTime(StructAccessorBenchmark_structAccessorVarHandle_getSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessorVarHandle_prepSend
+
+# Run progress: 41.67% complete, ETA 00:00:02
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_prepSend_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessorVarHandle_prepSend_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_prepSend_jmhTest.structAccessorVarHandle_prepSend_SampleTime(StructAccessorBenchmark_structAccessorVarHandle_prepSend_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessorVarHandle_readFields
+
+# Run progress: 50.00% complete, ETA 00:00:01
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_readFields_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessorVarHandle_readFields_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_readFields_jmhTest.structAccessorVarHandle_readFields_SampleTime(StructAccessorBenchmark_structAccessorVarHandle_readFields_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessorVarHandle_setSingleField
+
+# Run progress: 58.33% complete, ETA 00:00:01
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_setSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessorVarHandle_setSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessorVarHandle_setSingleField_jmhTest.structAccessorVarHandle_setSingleField_SampleTime(StructAccessorBenchmark_structAccessorVarHandle_setSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessor_getSingleField
+
+# Run progress: 66.67% complete, ETA 00:00:01
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_getSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessor_getSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_getSingleField_jmhTest.structAccessor_getSingleField_SampleTime(StructAccessorBenchmark_structAccessor_getSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessor_prepSend
+
+# Run progress: 75.00% complete, ETA 00:00:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_prepSend_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessor_prepSend_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_prepSend_jmhTest.structAccessor_prepSend_SampleTime(StructAccessorBenchmark_structAccessor_prepSend_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessor_readFields
+
+# Run progress: 83.33% complete, ETA 00:00:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_readFields_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessor_readFields_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_readFields_jmhTest.structAccessor_readFields_SampleTime(StructAccessorBenchmark_structAccessor_readFields_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.StructAccessorBenchmark.structAccessor_setSingleField
+
+# Run progress: 91.67% complete, ETA 00:00:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.NoSuchMethodError: 'java.lang.invoke.VarHandle express.mvp.roray.utils.functions.StructAccessor.varHandle(java.lang.String)'
+	at express.mvp.myra.transport.benchmark.StructAccessorBenchmark.<clinit>(StructAccessorBenchmark.java:81)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_setSingleField_jmhTest._jmh_tryInit_f_structaccessorbenchmark0_0(StructAccessorBenchmark_structAccessor_setSingleField_jmhTest.java:339)
+	at express.mvp.myra.transport.benchmark.jmh_generated.StructAccessorBenchmark_structAccessor_setSingleField_jmhTest.structAccessor_setSingleField_SampleTime(StructAccessorBenchmark_structAccessor_setSingleField_jmhTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+
+
+
+# Run complete. Total time: 00:00:03
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark  Mode  Cnt  Score   Error  Units
+
+Benchmark result is saved to /home/ubuntu/mvp-express/myra-transport/benchmarks/build/results/jmh/results.json
+
+BUILD SUCCESSFUL in 34s
+11 actionable tasks: 5 executed, 6 up-to-date
+Configuration cache entry stored.

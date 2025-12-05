@@ -1,0 +1,45 @@
+name: Build and Publish Javadoc
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.java'
+      - 'build.gradle.kts'
+      - '**/build.gradle.kts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "javadoc"
+  cancel-in-progress: true
+
+jobs:
+  build-javadoc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate Javadoc
+        run: ./gradlew aggregateJavadoc
+
+      - name: Upload Javadoc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc
+          path: build/docs/javadoc
+          retention-days: 7

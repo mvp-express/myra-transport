@@ -1,0 +1,215 @@
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/mvp-express/myra-transport/benchmarks/build/libs/benchmarks-0.1.0-SNAPSHOT-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 30 s each
+# Measurement: 3 iterations, 30 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.PingPongBenchmark.pingPong
+# Parameters: (clientCore = 1, clientSqPollCore = 3, implementation = MYRA, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 0.00% complete, ETA 00:04:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/mvp-express/myra-transport/benchmarks/build/libs/benchmarks-0.1.0-SNAPSHOT-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 33.042 ±(99.9%) 0.350 us/op
+Iteration   1: 32.001 ±(99.9%) 0.285 us/op
+                 p0.00:   26.464 us/op
+                 p0.50:   29.056 us/op
+                 p0.90:   32.064 us/op
+                 p0.95:   34.304 us/op
+                 p0.99:   44.864 us/op
+                 p0.999:  1010.267 us/op
+                 p0.9999: 2540.003 us/op
+                 p1.00:   4120.576 us/op
+
+Iteration   2: 31.869 ±(99.9%) 0.294 us/op
+                 p0.00:   26.720 us/op
+                 p0.50:   28.896 us/op
+                 p0.90:   31.616 us/op
+                 p0.95:   33.792 us/op
+                 p0.99:   44.096 us/op
+                 p0.999:  1054.720 us/op
+                 p0.9999: 2568.192 us/op
+                 p1.00:   8028.160 us/op
+
+Iteration   3: 31.797 ±(99.9%) 0.283 us/op
+                 p0.00:   26.464 us/op
+                 p0.50:   28.960 us/op
+                 p0.90:   31.616 us/op
+                 p0.95:   33.920 us/op
+                 p0.99:   43.840 us/op
+                 p0.999:  1017.876 us/op
+                 p0.9999: 2548.945 us/op
+                 p1.00:   4784.128 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.PingPongBenchmark.pingPong":
+  N = 1427657
+  mean =     31.889 ±(99.9%) 0.166 us/op
+
+  Histogram, us/op:
+    [   0.000,  500.000) = 1425837 
+    [ 500.000, 1000.000) = 353 
+    [1000.000, 1500.000) = 515 
+    [1500.000, 2000.000) = 438 
+    [2000.000, 2500.000) = 348 
+    [2500.000, 3000.000) = 153 
+    [3000.000, 3500.000) = 10 
+    [3500.000, 4000.000) = 0 
+    [4000.000, 4500.000) = 1 
+    [4500.000, 5000.000) = 1 
+    [5000.000, 5500.000) = 0 
+    [5500.000, 6000.000) = 0 
+    [6000.000, 6500.000) = 0 
+    [6500.000, 7000.000) = 0 
+    [7000.000, 7500.000) = 0 
+    [7500.000, 8000.000) = 0 
+    [8000.000, 8500.000) = 1 
+
+  Percentiles, us/op:
+      p(0.0000) =     26.464 us/op
+     p(50.0000) =     28.992 us/op
+     p(90.0000) =     31.776 us/op
+     p(95.0000) =     33.984 us/op
+     p(99.0000) =     44.251 us/op
+     p(99.9000) =   1024.000 us/op
+     p(99.9900) =   2552.767 us/op
+     p(99.9990) =   2992.608 us/op
+     p(99.9999) =   6640.824 us/op
+    p(100.0000) =   8028.160 us/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 30 s each
+# Measurement: 3 iterations, 30 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.PingPongBenchmark.pingPong
+# Parameters: (clientCore = 1, clientSqPollCore = 3, implementation = MYRA_SQPOLL, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 50.00% complete, ETA 00:02:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/mvp-express/myra-transport/benchmarks/build/libs/benchmarks-0.1.0-SNAPSHOT-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Warning: SQPOLL init with COOP_TASKRUN failed (errno=22), trying without it.
+Warning: SQPOLL init with COOP_TASKRUN failed (errno=22), trying without it.
+29.688 ±(99.9%) 0.652 us/op
+Iteration   1: 28.381 ±(99.9%) 0.498 us/op
+                 p0.00:   20.224 us/op
+                 p0.50:   23.040 us/op
+                 p0.90:   24.896 us/op
+                 p0.95:   27.520 us/op
+                 p0.99:   50.240 us/op
+                 p0.999:  1769.472 us/op
+                 p0.9999: 4743.149 us/op
+                 p1.00:   11386.880 us/op
+
+Iteration   2: 28.150 ±(99.9%) 0.469 us/op
+                 p0.00:   20.352 us/op
+                 p0.50:   23.040 us/op
+                 p0.90:   24.864 us/op
+                 p0.95:   27.712 us/op
+                 p0.99:   51.008 us/op
+                 p0.999:  1744.245 us/op
+                 p0.9999: 4270.788 us/op
+                 p1.00:   12091.392 us/op
+
+Iteration   3: 28.312 ±(99.9%) 0.476 us/op
+                 p0.00:   20.544 us/op
+                 p0.50:   23.072 us/op
+                 p0.90:   24.960 us/op
+                 p0.95:   27.840 us/op
+                 p0.99:   50.880 us/op
+                 p0.999:  1743.874 us/op
+                 p0.9999: 4211.509 us/op
+                 p1.00:   18481.152 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.PingPongBenchmark.pingPong":
+  N = 1637261
+  mean =     28.280 ±(99.9%) 0.278 us/op
+
+  Histogram, us/op:
+    [    0.000,  1250.000) = 1634971 
+    [ 1250.000,  2500.000) = 1481 
+    [ 2500.000,  3750.000) = 544 
+    [ 3750.000,  5000.000) = 160 
+    [ 5000.000,  6250.000) = 64 
+    [ 6250.000,  7500.000) = 12 
+    [ 7500.000,  8750.000) = 10 
+    [ 8750.000, 10000.000) = 9 
+    [10000.000, 11250.000) = 5 
+    [11250.000, 12500.000) = 4 
+    [12500.000, 13750.000) = 0 
+    [13750.000, 15000.000) = 0 
+    [15000.000, 16250.000) = 0 
+    [16250.000, 17500.000) = 0 
+    [17500.000, 18750.000) = 1 
+
+  Percentiles, us/op:
+      p(0.0000) =     20.224 us/op
+     p(50.0000) =     23.040 us/op
+     p(90.0000) =     24.896 us/op
+     p(95.0000) =     27.680 us/op
+     p(99.0000) =     50.752 us/op
+     p(99.9000) =   1753.088 us/op
+     p(99.9900) =   4422.217 us/op
+     p(99.9990) =   9097.606 us/op
+     p(99.9999) =  14409.201 us/op
+    p(100.0000) =  18481.152 us/op
+
+
+# Run complete. Total time: 00:04:01
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                           (clientCore)  (clientSqPollCore)  (implementation)  (pinning)  (serverCore)  (serverSqPollCore)    Mode      Cnt      Score   Error  Units
+PingPongBenchmark.pingPong                     1                   3              MYRA       true             0                   2  sample  1427657     31.889 ± 0.166  us/op
+PingPongBenchmark.pingPong:p0.00               1                   3              MYRA       true             0                   2  sample              26.464          us/op
+PingPongBenchmark.pingPong:p0.50               1                   3              MYRA       true             0                   2  sample              28.992          us/op
+PingPongBenchmark.pingPong:p0.90               1                   3              MYRA       true             0                   2  sample              31.776          us/op
+PingPongBenchmark.pingPong:p0.95               1                   3              MYRA       true             0                   2  sample              33.984          us/op
+PingPongBenchmark.pingPong:p0.99               1                   3              MYRA       true             0                   2  sample              44.251          us/op
+PingPongBenchmark.pingPong:p0.999              1                   3              MYRA       true             0                   2  sample            1024.000          us/op
+PingPongBenchmark.pingPong:p0.9999             1                   3              MYRA       true             0                   2  sample            2552.767          us/op
+PingPongBenchmark.pingPong:p1.00               1                   3              MYRA       true             0                   2  sample            8028.160          us/op
+PingPongBenchmark.pingPong                     1                   3       MYRA_SQPOLL       true             0                   2  sample  1637261     28.280 ± 0.278  us/op
+PingPongBenchmark.pingPong:p0.00               1                   3       MYRA_SQPOLL       true             0                   2  sample              20.224          us/op
+PingPongBenchmark.pingPong:p0.50               1                   3       MYRA_SQPOLL       true             0                   2  sample              23.040          us/op
+PingPongBenchmark.pingPong:p0.90               1                   3       MYRA_SQPOLL       true             0                   2  sample              24.896          us/op
+PingPongBenchmark.pingPong:p0.95               1                   3       MYRA_SQPOLL       true             0                   2  sample              27.680          us/op
+PingPongBenchmark.pingPong:p0.99               1                   3       MYRA_SQPOLL       true             0                   2  sample              50.752          us/op
+PingPongBenchmark.pingPong:p0.999              1                   3       MYRA_SQPOLL       true             0                   2  sample            1753.088          us/op
+PingPongBenchmark.pingPong:p0.9999             1                   3       MYRA_SQPOLL       true             0                   2  sample            4422.217          us/op
+PingPongBenchmark.pingPong:p1.00               1                   3       MYRA_SQPOLL       true             0                   2  sample           18481.152          us/op
+
+Benchmark result is saved to p2p3-benchmark-results.json

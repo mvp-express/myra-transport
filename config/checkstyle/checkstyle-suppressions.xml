@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<!--
+    Minimal suppressions for simplified Checkstyle rules.
+    Only suppress intentional patterns, not general categories.
+-->
+<suppressions>
+    <!-- Generated and build directories -->
+    <suppress files="[\\/]generated[\\/]" checks=".*"/>
+    <suppress files="[\\/]build[\\/]" checks=".*"/>
+    
+    <!-- Test and benchmark code - no Javadoc required -->
+    <suppress files="[\\/]test[\\/]" checks="MissingJavadocType"/>
+    <suppress files="[\\/]test[\\/]" checks="MissingJavadocMethod"/>
+    <suppress files="[\\/]test[\\/]" checks="AvoidStarImport"/>
+    <suppress files="[\\/]test[\\/]" checks="NeedBraces"/>
+    <suppress files="[\\/]benchmarks[\\/]" checks="MissingJavadocType"/>
+    <suppress files="[\\/]benchmarks[\\/]" checks="MissingJavadocMethod"/>
+    <suppress files="[\\/]benchmarks[\\/]" checks="AvoidStarImport"/>
+    
+    <!-- Low-level FFM code uses java.lang.foreign.* -->
+    <suppress files="LibUring\.java$" checks="AvoidStarImport"/>
+    <suppress files="LibUring\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="IoUringBackend\.java$" checks="AvoidStarImport"/>
+    <suppress files="IoUringBackend\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="NativeThread\.java$" checks="AvoidStarImport"/>
+    <suppress files="NativeThread\.java$" checks="MissingJavadocMethod"/>
+    
+    <!-- Internal implementation types -->
+    <suppress files="LibUring\.java$" checks="MissingJavadocType"/>
+    <suppress files="ConnectionState\.java$" checks="MissingJavadocType"/>
+    <suppress files="BufferRefImpl\.java$" checks="MissingJavadocType"/>
+    <suppress files="BufferRefImpl\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="LockFreeBufferPool\.java$" checks="MissingJavadocType"/>
+    <suppress files="LockFreeBufferPool\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="RegisteredBufferPoolImpl\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="ConnectionPoolImpl\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="NioBackend\.java$" checks="MissingJavadocMethod"/>
+    
+    <!-- Stats/Health/Config - record-like classes with self-documenting accessors -->
+    <suppress files="BackendStats\.java$" checks="MissingJavadocType"/>
+    <suppress files="BackendStats\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="BackendStats\.java$" checks="NeedBraces"/>
+    <suppress files="TransportHealth\.java$" checks="MissingJavadocType"/>
+    <suppress files="TransportHealth\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="TransportConfig\.java$" checks="MissingJavadocType"/>
+    <suppress files="TransportConfig\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="TransportConfig\.java$" checks="NeedBraces"/>
+    
+    <!-- Factory methods - self-documenting -->
+    <suppress files="TransportFactory\.java$" checks="MissingJavadocMethod"/>
+    <suppress files="TcpTransport\.java$" checks="MissingJavadocMethod"/>
+    
+    <!-- Exception constructors - standard pattern -->
+    <suppress files="TransportException\.java$" checks="MissingJavadocMethod"/>
+    
+    <!-- Buffer interfaces - accessor methods are self-documenting -->
+    <suppress files="RegisteredBuffer\.java$" checks="MissingJavadocMethod"/>
+    
+    <!-- Performance-critical code - single-line returns without braces -->
+    <suppress files="NioBackend\.java$" checks="NeedBraces"/>
+    <suppress files="TcpTransport\.java$" checks="NeedBraces"/>
+    <suppress files="LibUring\.java$" checks="NeedBraces"/>
+</suppressions>

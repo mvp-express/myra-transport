@@ -1,0 +1,726 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: jmh
+> Task :roray-ffm-utils:lib:processResources NO-SOURCE
+> Task :benchmarks:processResources NO-SOURCE
+> Task :benchmarks:processTestResources NO-SOURCE
+> Task :benchmarks:processJmhResources NO-SOURCE
+> Task :lib:processResources NO-SOURCE
+> Task :myra-server:processResources NO-SOURCE
+> Task :lib:compileJava UP-TO-DATE
+> Task :lib:classes UP-TO-DATE
+> Task :lib:jar UP-TO-DATE
+> Task :myra-server:compileJava UP-TO-DATE
+> Task :myra-server:classes UP-TO-DATE
+> Task :myra-server:jar UP-TO-DATE
+> Task :roray-ffm-utils:lib:compileJava FROM-CACHE
+> Task :roray-ffm-utils:lib:classes UP-TO-DATE
+> Task :benchmarks:compileJava NO-SOURCE
+> Task :benchmarks:classes UP-TO-DATE
+> Task :benchmarks:compileTestJava NO-SOURCE
+> Task :benchmarks:testClasses UP-TO-DATE
+> Task :roray-ffm-utils:lib:jar
+> Task :benchmarks:compileJmhJava
+> Task :benchmarks:jmhClasses
+> Task :benchmarks:jmhRunBytecodeGenerator
+> Task :benchmarks:jmhCompileGeneratedClasses
+> Task :benchmarks:jmhJar
+
+> Task :benchmarks:jmh
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.directLinker_clockGettime
+
+# Run progress: 0.00% complete, ETA 00:03:30
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 106.980 ±(99.9%) 57.466 ns/op
+# Warmup Iteration   2: 82.860 ±(99.9%) 3.803 ns/op
+Iteration   1: 79.033 ±(99.9%) 2.806 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 17822.192 ns/op
+                 p1.00:   24992.000 ns/op
+
+Iteration   2: 80.153 ±(99.9%) 3.600 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 16778.112 ns/op
+                 p1.00:   49600.000 ns/op
+
+Iteration   3: 82.773 ±(99.9%) 5.712 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 23406.714 ns/op
+                 p1.00:   144128.000 ns/op
+
+Iteration   4: 84.898 ±(99.9%) 3.694 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  1950.000 ns/op
+                 p0.9999: 20381.600 ns/op
+                 p1.00:   36864.000 ns/op
+
+Iteration   5: 82.231 ±(99.9%) 3.254 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 15724.451 ns/op
+                 p1.00:   52928.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.directLinker_clockGettime":
+  N = 509375
+  mean =     81.816 ±(99.9%) 1.763 ns/op
+
+  Histogram, ns/op:
+    [     0.000,  12500.000) = 509295 
+    [ 12500.000,  25000.000) = 60 
+    [ 25000.000,  37500.000) = 15 
+    [ 37500.000,  50000.000) = 3 
+    [ 50000.000,  62500.000) = 1 
+    [ 62500.000,  75000.000) = 0 
+    [ 75000.000,  87500.000) = 0 
+    [ 87500.000, 100000.000) = 0 
+    [100000.000, 112500.000) = 0 
+    [112500.000, 125000.000) = 0 
+    [125000.000, 137500.000) = 0 
+    [137500.000, 150000.000) = 1 
+    [150000.000, 162500.000) = 0 
+    [162500.000, 175000.000) = 0 
+    [175000.000, 187500.000) = 0 
+
+  Percentiles, ns/op:
+      p(0.0000) =     40.000 ns/op
+     p(50.0000) =     80.000 ns/op
+     p(90.0000) =     80.000 ns/op
+     p(95.0000) =     80.000 ns/op
+     p(99.0000) =     80.000 ns/op
+     p(99.9000) =    120.000 ns/op
+     p(99.9900) =  19043.994 ns/op
+     p(99.9990) =  43011.932 ns/op
+     p(99.9999) = 144128.000 ns/op
+    p(100.0000) = 144128.000 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.directLinker_getpid
+
+# Run progress: 16.67% complete, ETA 00:02:57
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 221.019 ±(99.9%) 70.525 ns/op
+# Warmup Iteration   2: 187.247 ±(99.9%) 6.197 ns/op
+Iteration   1: 179.792 ±(99.9%) 3.596 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2406.040 ns/op
+                 p0.9999: 20935.549 ns/op
+                 p1.00:   63744.000 ns/op
+
+Iteration   2: 178.403 ±(99.9%) 2.803 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2272.960 ns/op
+                 p0.9999: 16606.131 ns/op
+                 p1.00:   28736.000 ns/op
+
+Iteration   3: 177.645 ±(99.9%) 2.557 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2300.480 ns/op
+                 p0.9999: 15021.248 ns/op
+                 p1.00:   28800.000 ns/op
+
+Iteration   4: 177.502 ±(99.9%) 2.794 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  520.078 ns/op
+                 p0.9999: 18370.496 ns/op
+                 p1.00:   38144.000 ns/op
+
+Iteration   5: 176.166 ±(99.9%) 2.110 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  480.000 ns/op
+                 p0.9999: 13171.741 ns/op
+                 p1.00:   22752.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.directLinker_getpid":
+  N = 654504
+  mean =    177.901 ±(99.9%) 1.258 ns/op
+
+  Histogram, ns/op:
+    [    0.000,  5000.000) = 654199 
+    [ 5000.000, 10000.000) = 153 
+    [10000.000, 15000.000) = 67 
+    [15000.000, 20000.000) = 39 
+    [20000.000, 25000.000) = 33 
+    [25000.000, 30000.000) = 10 
+    [30000.000, 35000.000) = 0 
+    [35000.000, 40000.000) = 1 
+    [40000.000, 45000.000) = 1 
+    [45000.000, 50000.000) = 0 
+    [50000.000, 55000.000) = 0 
+    [55000.000, 60000.000) = 0 
+    [60000.000, 65000.000) = 1 
+
+  Percentiles, ns/op:
+      p(0.0000) =    160.000 ns/op
+     p(50.0000) =    160.000 ns/op
+     p(90.0000) =    200.000 ns/op
+     p(95.0000) =    200.000 ns/op
+     p(99.0000) =    200.000 ns/op
+     p(99.9000) =   2019.800 ns/op
+     p(99.9900) =  16704.000 ns/op
+     p(99.9990) =  28765.117 ns/op
+     p(99.9999) =  63744.000 ns/op
+    p(100.0000) =  63744.000 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_clockGettime
+
+# Run progress: 33.33% complete, ETA 00:02:21
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 102.932 ±(99.9%) 46.672 ns/op
+# Warmup Iteration   2: 81.751 ±(99.9%) 2.920 ns/op
+Iteration   1: 79.312 ±(99.9%) 3.578 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 13485.000 ns/op
+                 p1.00:   68736.000 ns/op
+
+Iteration   2: 84.489 ±(99.9%) 4.409 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  957.360 ns/op
+                 p0.9999: 21403.328 ns/op
+                 p1.00:   62720.000 ns/op
+
+Iteration   3: 79.206 ±(99.9%) 2.736 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 15369.819 ns/op
+                 p1.00:   28352.000 ns/op
+
+Iteration   4: 82.425 ±(99.9%) 4.200 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 23821.798 ns/op
+                 p1.00:   43648.000 ns/op
+
+Iteration   5: 80.370 ±(99.9%) 2.895 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 16084.198 ns/op
+                 p1.00:   26176.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_clockGettime":
+  N = 517651
+  mean =     81.167 ±(99.9%) 1.623 ns/op
+
+  Histogram, ns/op:
+    [    0.000,  5000.000) = 517439 
+    [ 5000.000, 10000.000) = 93 
+    [10000.000, 15000.000) = 42 
+    [15000.000, 20000.000) = 35 
+    [20000.000, 25000.000) = 23 
+    [25000.000, 30000.000) = 6 
+    [30000.000, 35000.000) = 4 
+    [35000.000, 40000.000) = 4 
+    [40000.000, 45000.000) = 2 
+    [45000.000, 50000.000) = 0 
+    [50000.000, 55000.000) = 1 
+    [55000.000, 60000.000) = 0 
+    [60000.000, 65000.000) = 1 
+
+  Percentiles, ns/op:
+      p(0.0000) =     40.000 ns/op
+     p(50.0000) =     80.000 ns/op
+     p(90.0000) =     80.000 ns/op
+     p(95.0000) =     80.000 ns/op
+     p(99.0000) =     80.000 ns/op
+     p(99.9000) =    120.000 ns/op
+     p(99.9900) =  19151.027 ns/op
+     p(99.9990) =  42236.055 ns/op
+     p(99.9999) =  68736.000 ns/op
+    p(100.0000) =  68736.000 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_critical_clockGettime
+
+# Run progress: 50.00% complete, ETA 00:01:46
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 132.076 ±(99.9%) 90.941 ns/op
+# Warmup Iteration   2: 80.006 ±(99.9%) 4.667 ns/op
+Iteration   1: 76.595 ±(99.9%) 4.031 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  81.000 ns/op
+                 p0.9999: 23068.608 ns/op
+                 p1.00:   49600.000 ns/op
+
+Iteration   2: 79.933 ±(99.9%) 5.308 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  120.000 ns/op
+                 p0.9999: 30320.717 ns/op
+                 p1.00:   65472.000 ns/op
+
+Iteration   3: 73.167 ±(99.9%) 2.403 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  80.000 ns/op
+                 p0.9999: 13436.682 ns/op
+                 p1.00:   29184.000 ns/op
+
+Iteration   4: 80.117 ±(99.9%) 14.186 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  157.400 ns/op
+                 p0.9999: 15994.888 ns/op
+                 p1.00:   466944.000 ns/op
+
+Iteration   5: 74.019 ±(99.9%) 2.352 ns/op
+                 p0.00:   40.000 ns/op
+                 p0.50:   80.000 ns/op
+                 p0.90:   80.000 ns/op
+                 p0.95:   80.000 ns/op
+                 p0.99:   80.000 ns/op
+                 p0.999:  81.000 ns/op
+                 p0.9999: 11697.768 ns/op
+                 p1.00:   29024.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_critical_clockGettime":
+  N = 557764
+  mean =     76.762 ±(99.9%) 3.196 ns/op
+
+  Histogram, ns/op:
+    [     0.000,  50000.000) = 557761 
+    [ 50000.000, 100000.000) = 2 
+    [100000.000, 150000.000) = 0 
+    [150000.000, 200000.000) = 0 
+    [200000.000, 250000.000) = 0 
+    [250000.000, 300000.000) = 0 
+    [300000.000, 350000.000) = 0 
+    [350000.000, 400000.000) = 0 
+    [400000.000, 450000.000) = 0 
+
+  Percentiles, ns/op:
+      p(0.0000) =     40.000 ns/op
+     p(50.0000) =     80.000 ns/op
+     p(90.0000) =     80.000 ns/op
+     p(95.0000) =     80.000 ns/op
+     p(99.0000) =     80.000 ns/op
+     p(99.9000) =     81.000 ns/op
+     p(99.9900) =  19701.456 ns/op
+     p(99.9990) =  44336.486 ns/op
+     p(99.9999) = 466944.000 ns/op
+    p(100.0000) = 466944.000 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_critical_getpid
+
+# Run progress: 66.67% complete, ETA 00:01:10
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 331.213 ±(99.9%) 76.339 ns/op
+# Warmup Iteration   2: 190.110 ±(99.9%) 11.084 ns/op
+Iteration   1: 308.847 ±(99.9%) 53.021 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   480.000 ns/op
+                 p0.95:   480.000 ns/op
+                 p0.99:   520.000 ns/op
+                 p0.999:  4360.000 ns/op
+                 p0.9999: 33532.774 ns/op
+                 p1.00:   2029568.000 ns/op
+
+Iteration   2: 179.921 ±(99.9%) 3.348 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2935.240 ns/op
+                 p0.9999: 20252.038 ns/op
+                 p1.00:   42432.000 ns/op
+
+Iteration   3: 179.770 ±(99.9%) 3.185 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  3046.040 ns/op
+                 p0.9999: 17065.181 ns/op
+                 p1.00:   38976.000 ns/op
+
+Iteration   4: 180.522 ±(99.9%) 4.086 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2778.120 ns/op
+                 p0.9999: 20798.742 ns/op
+                 p1.00:   72576.000 ns/op
+
+Iteration   5: 178.260 ±(99.9%) 2.989 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2217.160 ns/op
+                 p0.9999: 17307.456 ns/op
+                 p1.00:   37824.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_critical_getpid":
+  N = 651833
+  mean =    205.441 ±(99.9%) 10.685 ns/op
+
+  Histogram, ns/op:
+    [      0.000,  250000.000) = 651831 
+    [ 250000.000,  500000.000) = 1 
+    [ 500000.000,  750000.000) = 0 
+    [ 750000.000, 1000000.000) = 0 
+    [1000000.000, 1250000.000) = 0 
+    [1250000.000, 1500000.000) = 0 
+    [1500000.000, 1750000.000) = 0 
+    [1750000.000, 2000000.000) = 0 
+    [2000000.000, 2250000.000) = 1 
+    [2250000.000, 2500000.000) = 0 
+    [2500000.000, 2750000.000) = 0 
+
+  Percentiles, ns/op:
+      p(0.0000) =    160.000 ns/op
+     p(50.0000) =    160.000 ns/op
+     p(90.0000) =    200.000 ns/op
+     p(95.0000) =    480.000 ns/op
+     p(99.0000) =    480.000 ns/op
+     p(99.9000) =   3160.000 ns/op
+     p(99.9900) =  21134.394 ns/op
+     p(99.9990) = 105635.197 ns/op
+     p(99.9999) = 2029568.000 ns/op
+    p(100.0000) = 2029568.000 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 5 s each
+# Measurement: 5 iterations, 5 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_getpid
+
+# Run progress: 83.33% complete, ETA 00:00:35
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 217.991 ±(99.9%) 66.541 ns/op
+# Warmup Iteration   2: 262.771 ±(99.9%) 16.495 ns/op
+Iteration   1: 180.165 ±(99.9%) 2.762 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2185.560 ns/op
+                 p0.9999: 18433.514 ns/op
+                 p1.00:   33344.000 ns/op
+
+Iteration   2: 281.117 ±(99.9%) 3.540 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   480.000 ns/op
+                 p0.95:   480.000 ns/op
+                 p0.99:   520.000 ns/op
+                 p0.999:  3082.400 ns/op
+                 p0.9999: 20262.528 ns/op
+                 p1.00:   32352.000 ns/op
+
+Iteration   3: 179.810 ±(99.9%) 2.835 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  1816.000 ns/op
+                 p0.9999: 17107.040 ns/op
+                 p1.00:   50624.000 ns/op
+
+Iteration   4: 188.046 ±(99.9%) 16.657 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  2566.840 ns/op
+                 p0.9999: 17202.605 ns/op
+                 p1.00:   586752.000 ns/op
+
+Iteration   5: 177.947 ±(99.9%) 2.316 ns/op
+                 p0.00:   160.000 ns/op
+                 p0.50:   160.000 ns/op
+                 p0.90:   200.000 ns/op
+                 p0.95:   200.000 ns/op
+                 p0.99:   200.000 ns/op
+                 p0.999:  480.000 ns/op
+                 p0.9999: 12192.368 ns/op
+                 p1.00:   42880.000 ns/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.DowncallFactoryBenchmark.downcallFactory_getpid":
+  N = 653897
+  mean =    201.273 ±(99.9%) 3.508 ns/op
+
+  Histogram, ns/op:
+    [     0.000,  50000.000) = 653892 
+    [ 50000.000, 100000.000) = 2 
+    [100000.000, 150000.000) = 0 
+    [150000.000, 200000.000) = 1 
+    [200000.000, 250000.000) = 1 
+    [250000.000, 300000.000) = 0 
+    [300000.000, 350000.000) = 0 
+    [350000.000, 400000.000) = 0 
+    [400000.000, 450000.000) = 0 
+    [450000.000, 500000.000) = 0 
+    [500000.000, 550000.000) = 0 
+
+  Percentiles, ns/op:
+      p(0.0000) =    160.000 ns/op
+     p(50.0000) =    160.000 ns/op
+     p(90.0000) =    200.000 ns/op
+     p(95.0000) =    480.000 ns/op
+     p(99.0000) =    480.000 ns/op
+     p(99.9000) =   2164.080 ns/op
+     p(99.9900) =  17301.158 ns/op
+     p(99.9990) =  38257.708 ns/op
+     p(99.9999) = 586752.000 ns/op
+    p(100.0000) = 586752.000 ns/op
+
+
+# Run complete. Total time: 00:03:32
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                                                 Mode     Cnt        Score    Error  Units
+DowncallFactoryBenchmark.directLinker_clockGettime                      sample  509375       81.816 ±  1.763  ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.00                sample               40.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.50                sample               80.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.90                sample               80.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.95                sample               80.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.99                sample               80.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.999               sample              120.000           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p0.9999              sample            19043.994           ns/op
+DowncallFactoryBenchmark.directLinker_clockGettime:p1.00                sample           144128.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid                            sample  654504      177.901 ±  1.258  ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.00                      sample              160.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.50                      sample              160.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.90                      sample              200.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.95                      sample              200.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.99                      sample              200.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.999                     sample             2019.800           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p0.9999                    sample            16704.000           ns/op
+DowncallFactoryBenchmark.directLinker_getpid:p1.00                      sample            63744.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime                   sample  517651       81.167 ±  1.623  ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.00             sample               40.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.50             sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.90             sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.95             sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.99             sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.999            sample              120.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p0.9999           sample            19151.027           ns/op
+DowncallFactoryBenchmark.downcallFactory_clockGettime:p1.00             sample            68736.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime          sample  557764       76.762 ±  3.196  ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.00    sample               40.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.50    sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.90    sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.95    sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.99    sample               80.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.999   sample               81.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p0.9999  sample            19701.456           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_clockGettime:p1.00    sample           466944.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid                sample  651833      205.441 ± 10.685  ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.00          sample              160.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.50          sample              160.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.90          sample              200.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.95          sample              480.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.99          sample              480.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.999         sample             3160.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p0.9999        sample            21134.394           ns/op
+DowncallFactoryBenchmark.downcallFactory_critical_getpid:p1.00          sample          2029568.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid                         sample  653897      201.273 ±  3.508  ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.00                   sample              160.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.50                   sample              160.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.90                   sample              200.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.95                   sample              480.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.99                   sample              480.000           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.999                  sample             2164.080           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p0.9999                 sample            17301.158           ns/op
+DowncallFactoryBenchmark.downcallFactory_getpid:p1.00                   sample           586752.000           ns/op
+
+Benchmark result is saved to /home/ubuntu/mvp-express/myra-transport/benchmarks/build/results/jmh/results.json
+
+BUILD SUCCESSFUL in 3m 49s
+11 actionable tasks: 6 executed, 1 from cache, 4 up-to-date
+Configuration cache entry stored.

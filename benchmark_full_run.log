@@ -1,0 +1,620 @@
+nohup: ignoring input
+Calculating task graph as configuration cache cannot be reused because the set of Gradle properties has changed: 'jmh.iterations', 'jmh.params.implementation', 'jmh.time', 'jmh.warmupIterations', and 'jmh.warmupTime' were removed.
+> Task :myra-server:processResources NO-SOURCE
+> Task :lib:processResources NO-SOURCE
+> Task :roray-ffm-utils:lib:processResources NO-SOURCE
+> Task :benchmarks:clean
+> Task :benchmarks:processJmhResources NO-SOURCE
+> Task :benchmarks:processResources NO-SOURCE
+> Task :benchmarks:processTestResources NO-SOURCE
+> Task :roray-ffm-utils:lib:compileJava FROM-CACHE
+> Task :roray-ffm-utils:lib:classes UP-TO-DATE
+> Task :roray-ffm-utils:lib:jar
+> Task :lib:compileJava UP-TO-DATE
+> Task :lib:classes UP-TO-DATE
+> Task :lib:jar UP-TO-DATE
+> Task :myra-server:compileJava UP-TO-DATE
+> Task :myra-server:classes UP-TO-DATE
+> Task :benchmarks:compileJava NO-SOURCE
+> Task :benchmarks:classes UP-TO-DATE
+> Task :myra-server:jar UP-TO-DATE
+> Task :benchmarks:compileTestJava NO-SOURCE
+> Task :benchmarks:testClasses UP-TO-DATE
+> Task :benchmarks:compileJmhJava FROM-CACHE
+> Task :benchmarks:jmhClasses UP-TO-DATE
+> Task :benchmarks:jmhRunBytecodeGenerator FROM-CACHE
+> Task :benchmarks:jmhCompileGeneratedClasses FROM-CACHE
+> Task :benchmarks:jmhJar
+
+> Task :benchmarks:jmh
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED --enable-preview
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 120 s each
+# Measurement: 5 iterations, 120 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong
+# Parameters: (clientCore = 1, clientPollerCore = 3, clientSqPollCore = 3, implementation = NIO, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 0.00% complete, ETA 01:10:00
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Using port: 11418
+23.747 ±(99.9%) 0.062 us/op
+# Warmup Iteration   2: 23.555 ±(99.9%) 0.049 us/op
+Iteration   1: 23.362 ±(99.9%) 0.048 us/op
+                 p0.00:   16.512 us/op
+                 p0.50:   22.240 us/op
+                 p0.90:   24.512 us/op
+                 p0.95:   25.504 us/op
+                 p0.99:   36.480 us/op
+                 p0.999:  66.432 us/op
+                 p0.9999: 1200.451 us/op
+                 p1.00:   5070.848 us/op
+
+Iteration   2: 23.416 ±(99.9%) 0.050 us/op
+                 p0.00:   16.032 us/op
+                 p0.50:   22.240 us/op
+                 p0.90:   24.512 us/op
+                 p0.95:   25.632 us/op
+                 p0.99:   36.672 us/op
+                 p0.999:  79.744 us/op
+                 p0.9999: 1367.531 us/op
+                 p1.00:   5423.104 us/op
+
+Iteration   3: 23.418 ±(99.9%) 0.050 us/op
+                 p0.00:   16.320 us/op
+                 p0.50:   22.240 us/op
+                 p0.90:   24.544 us/op
+                 p0.95:   25.632 us/op
+                 p0.99:   36.800 us/op
+                 p0.999:  71.246 us/op
+                 p0.9999: 1369.541 us/op
+                 p1.00:   5685.248 us/op
+
+Iteration   4: 23.444 ±(99.9%) 0.050 us/op
+                 p0.00:   15.232 us/op
+                 p0.50:   22.272 us/op
+                 p0.90:   24.576 us/op
+                 p0.95:   25.600 us/op
+                 p0.99:   36.800 us/op
+                 p0.999:  75.020 us/op
+                 p0.9999: 1392.249 us/op
+                 p1.00:   4734.976 us/op
+
+Iteration   5: 23.497 ±(99.9%) 0.052 us/op
+                 p0.00:   16.192 us/op
+                 p0.50:   22.272 us/op
+                 p0.90:   24.576 us/op
+                 p0.95:   25.696 us/op
+                 p0.99:   36.928 us/op
+                 p0.999:  85.257 us/op
+                 p0.9999: 1515.520 us/op
+                 p1.00:   3833.856 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong":
+  N = 12824180
+  mean =     23.427 ±(99.9%) 0.022 us/op
+
+  Histogram, us/op:
+    [   0.000,  500.000) = 12821139 
+    [ 500.000, 1000.000) = 1331 
+    [1000.000, 1500.000) = 594 
+    [1500.000, 2000.000) = 482 
+    [2000.000, 2500.000) = 335 
+    [2500.000, 3000.000) = 230 
+    [3000.000, 3500.000) = 42 
+    [3500.000, 4000.000) = 14 
+    [4000.000, 4500.000) = 5 
+    [4500.000, 5000.000) = 5 
+    [5000.000, 5500.000) = 2 
+
+  Percentiles, us/op:
+      p(0.0000) =     15.232 us/op
+     p(50.0000) =     22.240 us/op
+     p(90.0000) =     24.544 us/op
+     p(95.0000) =     25.632 us/op
+     p(99.0000) =     36.736 us/op
+     p(99.9000) =     74.496 us/op
+     p(99.9900) =   1377.448 us/op
+     p(99.9990) =   2919.458 us/op
+     p(99.9999) =   4005.888 us/op
+    p(100.0000) =   5685.248 us/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED --enable-preview
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 120 s each
+# Measurement: 5 iterations, 120 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong
+# Parameters: (clientCore = 1, clientPollerCore = 3, clientSqPollCore = 3, implementation = NETTY, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 20.00% complete, ETA 00:56:06
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Using port: 39119
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+38.203 ±(99.9%) 0.044 us/op
+# Warmup Iteration   2: 37.788 ±(99.9%) 0.018 us/op
+Iteration   1: 38.010 ±(99.9%) 0.018 us/op
+                 p0.00:   24.064 us/op
+                 p0.50:   36.480 us/op
+                 p0.90:   44.608 us/op
+                 p0.95:   48.576 us/op
+                 p0.99:   61.568 us/op
+                 p0.999:  77.440 us/op
+                 p0.9999: 89.344 us/op
+                 p1.00:   987.136 us/op
+
+Iteration   2: 37.754 ±(99.9%) 0.018 us/op
+                 p0.00:   23.776 us/op
+                 p0.50:   36.224 us/op
+                 p0.90:   44.416 us/op
+                 p0.95:   48.320 us/op
+                 p0.99:   61.248 us/op
+                 p0.999:  76.800 us/op
+                 p0.9999: 88.448 us/op
+                 p1.00:   960.512 us/op
+
+Iteration   3: 37.955 ±(99.9%) 0.025 us/op
+                 p0.00:   24.384 us/op
+                 p0.50:   36.480 us/op
+                 p0.90:   44.544 us/op
+                 p0.95:   48.512 us/op
+                 p0.99:   60.160 us/op
+                 p0.999:  74.496 us/op
+                 p0.9999: 87.680 us/op
+                 p1.00:   4177.920 us/op
+
+Iteration   4: 37.738 ±(99.9%) 0.019 us/op
+                 p0.00:   23.360 us/op
+                 p0.50:   36.224 us/op
+                 p0.90:   44.352 us/op
+                 p0.95:   48.320 us/op
+                 p0.99:   60.032 us/op
+                 p0.999:  75.392 us/op
+                 p0.9999: 88.960 us/op
+                 p1.00:   2703.360 us/op
+
+Iteration   5: 37.868 ±(99.9%) 0.019 us/op
+                 p0.00:   23.680 us/op
+                 p0.50:   36.352 us/op
+                 p0.90:   44.480 us/op
+                 p0.95:   48.384 us/op
+                 p0.99:   60.480 us/op
+                 p0.999:  75.520 us/op
+                 p0.9999: 87.040 us/op
+                 p1.00:   2985.984 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong":
+  N = 7908316
+  mean =     37.865 ±(99.9%) 0.009 us/op
+
+  Histogram, us/op:
+    [   0.000,  500.000) = 7908207 
+    [ 500.000, 1000.000) = 80 
+    [1000.000, 1500.000) = 21 
+    [1500.000, 2000.000) = 0 
+    [2000.000, 2500.000) = 3 
+    [2500.000, 3000.000) = 2 
+    [3000.000, 3500.000) = 0 
+    [3500.000, 4000.000) = 1 
+    [4000.000, 4500.000) = 2 
+
+  Percentiles, us/op:
+      p(0.0000) =     23.360 us/op
+     p(50.0000) =     36.352 us/op
+     p(90.0000) =     44.480 us/op
+     p(95.0000) =     48.384 us/op
+     p(99.0000) =     60.672 us/op
+     p(99.9000) =     76.032 us/op
+     p(99.9900) =     88.320 us/op
+     p(99.9990) =    789.932 us/op
+     p(99.9999) =   2058.296 us/op
+    p(100.0000) =   4177.920 us/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED --enable-preview
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 120 s each
+# Measurement: 5 iterations, 120 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong
+# Parameters: (clientCore = 1, clientPollerCore = 3, clientSqPollCore = 3, implementation = MYRA, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 40.00% complete, ETA 00:42:10
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Using port: 32162
+34.769 ±(99.9%) 0.150 us/op
+# Warmup Iteration   2: 34.407 ±(99.9%) 0.144 us/op
+Iteration   1: 34.451 ±(99.9%) 0.141 us/op
+                 p0.00:   26.976 us/op
+                 p0.50:   32.000 us/op
+                 p0.90:   35.328 us/op
+                 p0.95:   37.760 us/op
+                 p0.99:   50.304 us/op
+                 p0.999:  620.032 us/op
+                 p0.9999: 2561.024 us/op
+                 p1.00:   12238.848 us/op
+
+Iteration   2: 34.539 ±(99.9%) 0.146 us/op
+                 p0.00:   26.464 us/op
+                 p0.50:   32.032 us/op
+                 p0.90:   35.392 us/op
+                 p0.95:   37.632 us/op
+                 p0.99:   49.792 us/op
+                 p0.999:  742.528 us/op
+                 p0.9999: 2609.152 us/op
+                 p1.00:   11845.632 us/op
+
+Iteration   3: 34.414 ±(99.9%) 0.141 us/op
+                 p0.00:   26.944 us/op
+                 p0.50:   32.000 us/op
+                 p0.90:   35.200 us/op
+                 p0.95:   37.504 us/op
+                 p0.99:   49.664 us/op
+                 p0.999:  669.710 us/op
+                 p0.9999: 2588.880 us/op
+                 p1.00:   7331.840 us/op
+
+Iteration   4: 34.498 ±(99.9%) 0.206 us/op
+                 p0.00:   26.720 us/op
+                 p0.50:   32.000 us/op
+                 p0.90:   35.264 us/op
+                 p0.95:   37.568 us/op
+                 p0.99:   49.920 us/op
+                 p0.999:  701.432 us/op
+                 p0.9999: 2581.913 us/op
+                 p1.00:   79691.776 us/op
+
+Iteration   5: 34.540 ±(99.9%) 0.143 us/op
+                 p0.00:   26.784 us/op
+                 p0.50:   32.032 us/op
+                 p0.90:   35.392 us/op
+                 p0.95:   37.696 us/op
+                 p0.99:   49.984 us/op
+                 p0.999:  735.232 us/op
+                 p0.9999: 2576.384 us/op
+                 p1.00:   6012.928 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong":
+  N = 8684766
+  mean =     34.488 ±(99.9%) 0.071 us/op
+
+  Histogram, us/op:
+    [    0.000,  5000.000) = 8684755 
+    [ 5000.000, 10000.000) = 8 
+    [10000.000, 15000.000) = 2 
+    [15000.000, 20000.000) = 0 
+    [20000.000, 25000.000) = 0 
+    [25000.000, 30000.000) = 0 
+    [30000.000, 35000.000) = 0 
+    [35000.000, 40000.000) = 0 
+    [40000.000, 45000.000) = 0 
+    [45000.000, 50000.000) = 0 
+    [50000.000, 55000.000) = 0 
+    [55000.000, 60000.000) = 0 
+    [60000.000, 65000.000) = 0 
+    [65000.000, 70000.000) = 0 
+    [70000.000, 75000.000) = 0 
+
+  Percentiles, us/op:
+      p(0.0000) =     26.464 us/op
+     p(50.0000) =     32.000 us/op
+     p(90.0000) =     35.264 us/op
+     p(95.0000) =     37.632 us/op
+     p(99.0000) =     49.920 us/op
+     p(99.9000) =    697.344 us/op
+     p(99.9900) =   2580.480 us/op
+     p(99.9990) =   3080.192 us/op
+     p(99.9999) =   5962.441 us/op
+    p(100.0000) =  79691.776 us/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED --enable-preview
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 120 s each
+# Measurement: 5 iterations, 120 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong
+# Parameters: (clientCore = 1, clientPollerCore = 3, clientSqPollCore = 3, implementation = MYRA_SQPOLL, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 60.00% complete, ETA 00:28:05
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Using port: 17623
+31.818 ±(99.9%) 0.285 us/op
+# Warmup Iteration   2: 32.405 ±(99.9%) 0.298 us/op
+Iteration   1: 32.659 ±(99.9%) 0.307 us/op
+                 p0.00:   22.752 us/op
+                 p0.50:   25.536 us/op
+                 p0.90:   28.064 us/op
+                 p0.95:   32.832 us/op
+                 p0.99:   61.696 us/op
+                 p0.999:  2174.976 us/op
+                 p0.9999: 4910.465 us/op
+                 p1.00:   15613.952 us/op
+
+Iteration   2: 32.520 ±(99.9%) 0.299 us/op
+                 p0.00:   22.624 us/op
+                 p0.50:   25.632 us/op
+                 p0.90:   28.224 us/op
+                 p0.95:   32.960 us/op
+                 p0.99:   60.416 us/op
+                 p0.999:  2113.536 us/op
+                 p0.9999: 4816.896 us/op
+                 p1.00:   13238.272 us/op
+
+Iteration   3: 33.150 ±(99.9%) 0.373 us/op
+                 p0.00:   22.592 us/op
+                 p0.50:   25.600 us/op
+                 p0.90:   28.000 us/op
+                 p0.95:   32.576 us/op
+                 p0.99:   59.392 us/op
+                 p0.999:  2240.512 us/op
+                 p0.9999: 5988.459 us/op
+                 p1.00:   42074.112 us/op
+
+Iteration   4: 32.470 ±(99.9%) 0.306 us/op
+                 p0.00:   22.720 us/op
+                 p0.50:   25.600 us/op
+                 p0.90:   28.160 us/op
+                 p0.95:   32.704 us/op
+                 p0.99:   60.160 us/op
+                 p0.999:  2105.344 us/op
+                 p0.9999: 4805.766 us/op
+                 p1.00:   29261.824 us/op
+
+Iteration   5: 32.150 ±(99.9%) 0.308 us/op
+                 p0.00:   22.560 us/op
+                 p0.50:   25.632 us/op
+                 p0.90:   28.224 us/op
+                 p0.95:   32.832 us/op
+                 p0.99:   58.304 us/op
+                 p0.999:  2037.760 us/op
+                 p0.9999: 5424.814 us/op
+                 p1.00:   14237.696 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong":
+  N = 9197571
+  mean =     32.586 ±(99.9%) 0.143 us/op
+
+  Histogram, us/op:
+    [    0.000,  5000.000) = 9196587 
+    [ 5000.000, 10000.000) = 889 
+    [10000.000, 15000.000) = 81 
+    [15000.000, 20000.000) = 8 
+    [20000.000, 25000.000) = 2 
+    [25000.000, 30000.000) = 2 
+    [30000.000, 35000.000) = 1 
+    [35000.000, 40000.000) = 0 
+    [40000.000, 45000.000) = 1 
+
+  Percentiles, us/op:
+      p(0.0000) =     22.560 us/op
+     p(50.0000) =     25.600 us/op
+     p(90.0000) =     28.160 us/op
+     p(95.0000) =     32.768 us/op
+     p(99.0000) =     59.904 us/op
+     p(99.9000) =   2134.016 us/op
+     p(99.9900) =   5038.080 us/op
+     p(99.9990) =  10027.008 us/op
+     p(99.9999) =  16284.448 us/op
+    p(100.0000) =  42074.112 us/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.1, OpenJDK 64-Bit Server VM, 25.0.1+8-LTS
+# VM invoker: /home/ubuntu/.sdkman/candidates/java/25.0.1-tem/bin/java
+# VM options: --enable-native-access=ALL-UNNAMED --enable-preview
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 2 iterations, 120 s each
+# Measurement: 5 iterations, 120 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Sampling time
+# Benchmark: express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong
+# Parameters: (clientCore = 1, clientPollerCore = 3, clientSqPollCore = 3, implementation = MYRA_TOKEN, pinning = true, serverCore = 0, serverSqPollCore = 2)
+
+# Run progress: 80.00% complete, ETA 00:14:02
+# Fork: 1 of 1
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/ubuntu/.gradle/caches/modules-2/files-2.1/org.openjdk.jmh/jmh-core/1.37/896f27e49105b35ea1964319c83d12082e7a79ef/jmh-core-1.37.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: Using port: 41005
+28.531 ±(99.9%) 0.083 us/op
+# Warmup Iteration   2: 28.341 ±(99.9%) 0.080 us/op
+Iteration   1: 28.290 ±(99.9%) 0.064 us/op
+                 p0.00:   24.320 us/op
+                 p0.50:   26.720 us/op
+                 p0.90:   29.824 us/op
+                 p0.95:   32.320 us/op
+                 p0.99:   43.968 us/op
+                 p0.999:  65.863 us/op
+                 p0.9999: 1321.146 us/op
+                 p1.00:   6103.040 us/op
+
+Iteration   2: 28.250 ±(99.9%) 0.071 us/op
+                 p0.00:   24.640 us/op
+                 p0.50:   26.656 us/op
+                 p0.90:   29.632 us/op
+                 p0.95:   32.160 us/op
+                 p0.99:   43.648 us/op
+                 p0.999:  66.048 us/op
+                 p0.9999: 1354.034 us/op
+                 p1.00:   8028.160 us/op
+
+Iteration   3: 28.293 ±(99.9%) 0.156 us/op
+                 p0.00:   24.192 us/op
+                 p0.50:   26.656 us/op
+                 p0.90:   29.632 us/op
+                 p0.95:   32.192 us/op
+                 p0.99:   43.776 us/op
+                 p0.999:  69.504 us/op
+                 p0.9999: 1340.308 us/op
+                 p1.00:   90963.968 us/op
+
+Iteration   4: 28.247 ±(99.9%) 0.165 us/op
+                 p0.00:   22.464 us/op
+                 p0.50:   26.624 us/op
+                 p0.90:   29.600 us/op
+                 p0.95:   32.096 us/op
+                 p0.99:   43.712 us/op
+                 p0.999:  68.992 us/op
+                 p0.9999: 1535.929 us/op
+                 p1.00:   94502.912 us/op
+
+Iteration   5: 28.180 ±(99.9%) 0.071 us/op
+                 p0.00:   24.416 us/op
+                 p0.50:   26.656 us/op
+                 p0.90:   29.824 us/op
+                 p0.95:   32.224 us/op
+                 p0.99:   43.712 us/op
+                 p0.999:  66.560 us/op
+                 p0.9999: 1421.782 us/op
+                 p1.00:   10731.520 us/op
+
+
+
+Result "express.mvp.myra.transport.benchmark.RealWorldPayloadBenchmark.pingPong":
+  N = 10653932
+  mean =     28.252 ±(99.9%) 0.051 us/op
+
+  Histogram, us/op:
+    [     0.000,  10000.000) = 10653928 
+    [ 10000.000,  20000.000) = 2 
+    [ 20000.000,  30000.000) = 0 
+    [ 30000.000,  40000.000) = 0 
+    [ 40000.000,  50000.000) = 0 
+    [ 50000.000,  60000.000) = 0 
+    [ 60000.000,  70000.000) = 0 
+    [ 70000.000,  80000.000) = 0 
+    [ 80000.000,  90000.000) = 0 
+
+  Percentiles, us/op:
+      p(0.0000) =     22.464 us/op
+     p(50.0000) =     26.656 us/op
+     p(90.0000) =     29.696 us/op
+     p(95.0000) =     32.224 us/op
+     p(99.0000) =     43.776 us/op
+     p(99.9000) =     67.456 us/op
+     p(99.9900) =   1389.787 us/op
+     p(99.9990) =   4032.351 us/op
+     p(99.9999) =   7042.598 us/op
+    p(100.0000) =  94502.912 us/op
+
+
+# Run complete. Total time: 01:10:12
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                   (clientCore)  (clientPollerCore)  (clientSqPollCore)  (implementation)  (pinning)  (serverCore)  (serverSqPollCore)    Mode       Cnt      Score   Error  Units
+RealWorldPayloadBenchmark.pingPong                     1                   3                   3               NIO       true             0                   2  sample  12824180     23.427 ± 0.022  us/op
+RealWorldPayloadBenchmark.pingPong:p0.00               1                   3                   3               NIO       true             0                   2  sample               15.232          us/op
+RealWorldPayloadBenchmark.pingPong:p0.50               1                   3                   3               NIO       true             0                   2  sample               22.240          us/op
+RealWorldPayloadBenchmark.pingPong:p0.90               1                   3                   3               NIO       true             0                   2  sample               24.544          us/op
+RealWorldPayloadBenchmark.pingPong:p0.95               1                   3                   3               NIO       true             0                   2  sample               25.632          us/op
+RealWorldPayloadBenchmark.pingPong:p0.99               1                   3                   3               NIO       true             0                   2  sample               36.736          us/op
+RealWorldPayloadBenchmark.pingPong:p0.999              1                   3                   3               NIO       true             0                   2  sample               74.496          us/op
+RealWorldPayloadBenchmark.pingPong:p0.9999             1                   3                   3               NIO       true             0                   2  sample             1377.448          us/op
+RealWorldPayloadBenchmark.pingPong:p1.00               1                   3                   3               NIO       true             0                   2  sample             5685.248          us/op
+RealWorldPayloadBenchmark.pingPong                     1                   3                   3             NETTY       true             0                   2  sample   7908316     37.865 ± 0.009  us/op
+RealWorldPayloadBenchmark.pingPong:p0.00               1                   3                   3             NETTY       true             0                   2  sample               23.360          us/op
+RealWorldPayloadBenchmark.pingPong:p0.50               1                   3                   3             NETTY       true             0                   2  sample               36.352          us/op
+RealWorldPayloadBenchmark.pingPong:p0.90               1                   3                   3             NETTY       true             0                   2  sample               44.480          us/op
+RealWorldPayloadBenchmark.pingPong:p0.95               1                   3                   3             NETTY       true             0                   2  sample               48.384          us/op
+RealWorldPayloadBenchmark.pingPong:p0.99               1                   3                   3             NETTY       true             0                   2  sample               60.672          us/op
+RealWorldPayloadBenchmark.pingPong:p0.999              1                   3                   3             NETTY       true             0                   2  sample               76.032          us/op
+RealWorldPayloadBenchmark.pingPong:p0.9999             1                   3                   3             NETTY       true             0                   2  sample               88.320          us/op
+RealWorldPayloadBenchmark.pingPong:p1.00               1                   3                   3             NETTY       true             0                   2  sample             4177.920          us/op
+RealWorldPayloadBenchmark.pingPong                     1                   3                   3              MYRA       true             0                   2  sample   8684766     34.488 ± 0.071  us/op
+RealWorldPayloadBenchmark.pingPong:p0.00               1                   3                   3              MYRA       true             0                   2  sample               26.464          us/op
+RealWorldPayloadBenchmark.pingPong:p0.50               1                   3                   3              MYRA       true             0                   2  sample               32.000          us/op
+RealWorldPayloadBenchmark.pingPong:p0.90               1                   3                   3              MYRA       true             0                   2  sample               35.264          us/op
+RealWorldPayloadBenchmark.pingPong:p0.95               1                   3                   3              MYRA       true             0                   2  sample               37.632          us/op
+RealWorldPayloadBenchmark.pingPong:p0.99               1                   3                   3              MYRA       true             0                   2  sample               49.920          us/op
+RealWorldPayloadBenchmark.pingPong:p0.999              1                   3                   3              MYRA       true             0                   2  sample              697.344          us/op
+RealWorldPayloadBenchmark.pingPong:p0.9999             1                   3                   3              MYRA       true             0                   2  sample             2580.480          us/op
+RealWorldPayloadBenchmark.pingPong:p1.00               1                   3                   3              MYRA       true             0                   2  sample            79691.776          us/op
+RealWorldPayloadBenchmark.pingPong                     1                   3                   3       MYRA_SQPOLL       true             0                   2  sample   9197571     32.586 ± 0.143  us/op
+RealWorldPayloadBenchmark.pingPong:p0.00               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample               22.560          us/op
+RealWorldPayloadBenchmark.pingPong:p0.50               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample               25.600          us/op
+RealWorldPayloadBenchmark.pingPong:p0.90               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample               28.160          us/op
+RealWorldPayloadBenchmark.pingPong:p0.95               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample               32.768          us/op
+RealWorldPayloadBenchmark.pingPong:p0.99               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample               59.904          us/op
+RealWorldPayloadBenchmark.pingPong:p0.999              1                   3                   3       MYRA_SQPOLL       true             0                   2  sample             2134.016          us/op
+RealWorldPayloadBenchmark.pingPong:p0.9999             1                   3                   3       MYRA_SQPOLL       true             0                   2  sample             5038.080          us/op
+RealWorldPayloadBenchmark.pingPong:p1.00               1                   3                   3       MYRA_SQPOLL       true             0                   2  sample            42074.112          us/op
+RealWorldPayloadBenchmark.pingPong                     1                   3                   3        MYRA_TOKEN       true             0                   2  sample  10653932     28.252 ± 0.051  us/op
+RealWorldPayloadBenchmark.pingPong:p0.00               1                   3                   3        MYRA_TOKEN       true             0                   2  sample               22.464          us/op
+RealWorldPayloadBenchmark.pingPong:p0.50               1                   3                   3        MYRA_TOKEN       true             0                   2  sample               26.656          us/op
+RealWorldPayloadBenchmark.pingPong:p0.90               1                   3                   3        MYRA_TOKEN       true             0                   2  sample               29.696          us/op
+RealWorldPayloadBenchmark.pingPong:p0.95               1                   3                   3        MYRA_TOKEN       true             0                   2  sample               32.224          us/op
+RealWorldPayloadBenchmark.pingPong:p0.99               1                   3                   3        MYRA_TOKEN       true             0                   2  sample               43.776          us/op
+RealWorldPayloadBenchmark.pingPong:p0.999              1                   3                   3        MYRA_TOKEN       true             0                   2  sample               67.456          us/op
+RealWorldPayloadBenchmark.pingPong:p0.9999             1                   3                   3        MYRA_TOKEN       true             0                   2  sample             1389.787          us/op
+RealWorldPayloadBenchmark.pingPong:p1.00               1                   3                   3        MYRA_TOKEN       true             0                   2  sample            94502.912          us/op
+
+Benchmark result is saved to /home/ubuntu/mvp-express/myra-transport/benchmarks/build/results/jmh/results.json
+
+BUILD SUCCESSFUL in 1h 10m 17s
+12 actionable tasks: 4 executed, 4 from cache, 4 up-to-date
+Configuration cache entry stored.
