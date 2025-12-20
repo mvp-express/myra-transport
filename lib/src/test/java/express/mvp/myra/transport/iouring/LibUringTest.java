@@ -263,10 +263,10 @@ class LibUringTest {
                 byte opcode = sqe.get(ValueLayout.JAVA_BYTE, 0);
                 assertEquals(LibUring.IORING_OP_RECV, opcode);
 
-                // Check op_flags includes multishot
-                int opFlags = sqe.get(ValueLayout.JAVA_INT, 28);
+                // Check multishot flag in ioprio
+                short ioprio = sqe.get(ValueLayout.JAVA_SHORT, 2);
                 assertTrue(
-                        (opFlags & LibUring.IORING_RECV_MULTISHOT) != 0,
+                    (ioprio & LibUring.IORING_RECV_MULTISHOT) != 0,
                         "Should have multishot flag set");
             }
         }
@@ -630,9 +630,9 @@ class LibUringTest {
                 // Check buf_group (at buf_index offset, offset 40)
                 assertEquals(testBgid, sqe.get(ValueLayout.JAVA_SHORT, 40));
 
-                // Check multishot flag in op_flags
-                int opFlags = sqe.get(ValueLayout.JAVA_INT, 28);
-                assertTrue((opFlags & LibUring.IORING_RECV_MULTISHOT) != 0);
+                // Check multishot flag in ioprio
+                short ioprio = sqe.get(ValueLayout.JAVA_SHORT, 2);
+                assertTrue((ioprio & LibUring.IORING_RECV_MULTISHOT) != 0);
             }
         }
     }

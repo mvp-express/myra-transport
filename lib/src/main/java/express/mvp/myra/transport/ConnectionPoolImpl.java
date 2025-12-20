@@ -201,7 +201,13 @@ public final class ConnectionPoolImpl implements ConnectionPool {
                 backend.initialize(config);
                 backend.registerBufferPool(bufferPool);
                 Transport transport =
-                        new TcpTransport(backend, bufferPool, endpoint, config.cpuAffinity());
+                    new TcpTransport(
+                        backend,
+                        bufferPool,
+                        endpoint,
+                        config.cpuAffinity(),
+                            config.bufferMode(),
+                            config.zeroCopySendMinBytes());
 
                 // Start transport with connect handler
                 transport.start(

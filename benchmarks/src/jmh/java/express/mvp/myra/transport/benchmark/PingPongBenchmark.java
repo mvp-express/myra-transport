@@ -26,12 +26,15 @@ import java.util.concurrent.atomic.AtomicReference;
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Fork(1)
-@Warmup(iterations = 5, time = 10)
-@Measurement(iterations = 5, time = 10)
+@Warmup(iterations = 1, time = 10)
+@Measurement(iterations = 1, time = 30)
 public class PingPongBenchmark {
 
     @Param({ "NIO", "NETTY", "MYRA", "MYRA_SQPOLL", "MYRA_TOKEN", "MYRA_NIO" })
     private String implementation;
+
+    @Param({ "STANDARD", "FIXED", "BUFFER_RING", "ZERO_COPY" })
+    private String bufferMode;
 
     @Param("true")
     private boolean pinning;
@@ -48,6 +51,9 @@ public class PingPongBenchmark {
     @Param("3")
     private int clientSqPollCore;
 
+    @Param("3")
+    private int clientPollerCore;
+
     private BenchmarkDriver driver;
 
     @Setup
@@ -59,10 +65,10 @@ public class PingPongBenchmark {
         switch (implementation) {
             case "NIO" -> driver = new NioDriver(pinning ? serverCore : -1);
             case "NETTY" -> driver = new NettyDriver(pinning ? serverCore : -1);
-            case "MYRA" -> driver = new MyraDriver(false, false, pinning ? serverCore : -1, pinning ? clientCore : -1, -1, -1);
-            case "MYRA_SQPOLL" -> driver = new MyraDriver(true, false, pinning ? serverCore : -1, pinning ? clientCore : -1,
+            case "MYRA" -> driver = new MyraDriver(false, false, bufferMode, pinning ? serverCore : -1, pinning ? clientCore : -1, -1, -1);
+                case "MYRA_SQPOLL" -> driver = new MyraDriver(true, false, bufferMode, pinning ? serverCore : -1, pinning ? clientCore : -1,
                     pinning ? serverSqPollCore : -1, pinning ? clientSqPollCore : -1);
-            case "MYRA_TOKEN" -> driver = new MyraDriver(false, true, pinning ? serverCore : -1, pinning ? clientCore : -1, -1, -1);
+            case "MYRA_TOKEN" -> driver = new MyraDriver(false, true, bufferMode, pinning ? serverCore : -1, pinning ? clientPollerCore : -1, -1, -1);
             case "MYRA_NIO" -> driver = new MyraNioDriver(pinning ? serverCore : -1, pinning ? clientCore : -1);
             default -> throw new IllegalArgumentException("Unknown implementation: " + implementation);
         }
@@ -490,14 +496,23 @@ public class PingPongBenchmark {
         private volatile boolean tokenReceived;
         private final boolean sqPoll;
         private final boolean tokenMode;
+        private final TransportConfig.BufferMode bufferMode;
         private final int serverCore;
         private final int clientCore;
         private final int serverSqPollCore;
         private final int clientSqPollCore;
 
-        public MyraDriver(boolean sqPoll, boolean tokenMode, int serverCore, int clientCore, int serverSqPollCore, int clientSqPollCore) {
+        public MyraDriver(
+                boolean sqPoll,
+                boolean tokenMode,
+                String bufferMode,
+                int serverCore,
+                int clientCore,
+                int serverSqPollCore,
+                int clientSqPollCore) {
             this.sqPoll = sqPoll;
             this.tokenMode = tokenMode;
+            this.bufferMode = TransportConfig.BufferMode.valueOf(bufferMode);
             this.serverCore = serverCore;
             this.clientCore = clientCore;
             this.serverSqPollCore = serverSqPollCore;
@@ -538,6 +553,7 @@ public class PingPongBenchmark {
             // Client Setup
             TransportConfig clientConfig = TransportConfig.builder()
                     .backendType(TransportConfig.BackendType.IO_URING)
+                    .bufferMode(bufferMode)
                     .registeredBuffers(TransportConfig.RegisteredBuffersConfig.builder()
                             .enabled(true)
                             .numBuffers(16)
@@ -553,7 +569,13 @@ public class PingPongBenchmark {
             clientBackend.registerBufferPool(clientPool);
 
             CountDownLatch connectLatch = new CountDownLatch(1);
-            client = new TcpTransport(clientBackend, clientPool, new InetSocketAddress("127.0.0.1", 9999), clientCore);
+            client = new TcpTransport(
+                    clientBackend,
+                    clientPool,
+                    new InetSocketAddress("127.0.0.1", 9999),
+                    clientCore,
+                    bufferMode,
+                    clientConfig.zeroCopySendMinBytes());
             client.start(new TransportHandlerAdapter() {
                 @Override
                 public void onConnected(long token) {

@@ -27,12 +27,15 @@ import java.util.concurrent.atomic.AtomicReference;
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Fork(1)
-@Warmup(iterations = 2, time = 30)
-@Measurement(iterations = 5, time = 60)
+@Warmup(iterations = 1, time = 10)
+@Measurement(iterations = 1, time = 30)
 public class RealWorldPayloadBenchmark {
 
     @Param({ "NIO", "NETTY", "MYRA", "MYRA_SQPOLL", "MYRA_TOKEN", "MYRA_NIO" })
     private String implementation;
+
+    @Param({ "STANDARD", "FIXED", "BUFFER_RING", "ZERO_COPY" })
+    private String bufferMode;
 
     @Param("true")
     private boolean pinning;
@@ -72,12 +75,12 @@ public class RealWorldPayloadBenchmark {
         switch (implementation) {
             case "NIO" -> driver = new NioDriver(port, pinning ? serverCore : -1);
             case "NETTY" -> driver = new NettyDriver(port, pinning ? serverCore : -1);
-            case "MYRA" -> driver = new MyraDriver(port, false, false, pinning ? serverCore : -1,
+            case "MYRA" -> driver = new MyraDriver(port, false, false, bufferMode, pinning ? serverCore : -1,
                     pinning ? clientCore : -1, -1, -1, pinning ? clientCore : -1);
             case "MYRA_SQPOLL" ->
-                driver = new MyraDriver(port, true, false, pinning ? serverCore : -1, pinning ? clientCore : -1,
+                driver = new MyraDriver(port, true, false, bufferMode, pinning ? serverCore : -1, pinning ? clientCore : -1,
                         pinning ? serverSqPollCore : -1, pinning ? clientSqPollCore : -1, pinning ? clientCore : -1);
-            case "MYRA_TOKEN" -> driver = new MyraDriver(port, false, true, pinning ? serverCore : -1,
+            case "MYRA_TOKEN" -> driver = new MyraDriver(port, false, true, bufferMode, pinning ? serverCore : -1,
                     pinning ? clientCore : -1,
                     pinning ? serverSqPollCore : -1, pinning ? clientSqPollCore : -1, pinning ? clientPollerCore : -1);
             case "MYRA_NIO" -> driver = new MyraNioDriver(port, pinning ? serverCore : -1, pinning ? clientCore : -1);
@@ -601,6 +604,7 @@ public class RealWorldPayloadBenchmark {
         private volatile boolean tokenReceived;
         private final boolean sqPoll;
         private final boolean tokenMode;
+        private final TransportConfig.BufferMode bufferMode;
         private final int serverCore;
         private final int clientCore;
         private final int serverSqPollCore;
@@ -608,11 +612,12 @@ public class RealWorldPayloadBenchmark {
         private final int clientPollerCore;
         private final int port;
 
-        public MyraDriver(int port, boolean sqPoll, boolean tokenMode, int serverCore, int clientCore,
+        public MyraDriver(int port, boolean sqPoll, boolean tokenMode, String bufferMode, int serverCore, int clientCore,
                 int serverSqPollCore, int clientSqPollCore, int clientPollerCore) {
             this.port = port;
             this.sqPoll = sqPoll;
             this.tokenMode = tokenMode;
+            this.bufferMode = TransportConfig.BufferMode.valueOf(bufferMode);
             this.serverCore = serverCore;
             this.clientCore = clientCore;
             this.serverSqPollCore = serverSqPollCore;
@@ -654,6 +659,7 @@ public class RealWorldPayloadBenchmark {
             // Client Setup
             TransportConfig clientConfig = TransportConfig.builder()
                     .backendType(TransportConfig.BackendType.IO_URING)
+                    .bufferMode(bufferMode)
                     .registeredBuffers(TransportConfig.RegisteredBuffersConfig.builder()
                             .enabled(true)
                             .numBuffers(16)
@@ -671,8 +677,13 @@ public class RealWorldPayloadBenchmark {
             CountDownLatch connectLatch = new CountDownLatch(1);
             // Use clientPollerCore if specified (>= 0), otherwise fallback to clientCore
             int pollerAffinity = clientPollerCore >= 0 ? clientPollerCore : clientCore;
-            client = new TcpTransport(clientBackend, clientPool, new InetSocketAddress("127.0.0.1", port),
-                    pollerAffinity);
+                client = new TcpTransport(
+                    clientBackend,
+                    clientPool,
+                    new InetSocketAddress("127.0.0.1", port),
+                    pollerAffinity,
+                    bufferMode,
+                    clientConfig.zeroCopySendMinBytes());
             client.start(new TransportHandlerAdapter() {
                 @Override
                 public void onConnected(long token) {

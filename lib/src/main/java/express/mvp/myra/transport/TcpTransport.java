@@ -1,6 +1,8 @@
 package express.mvp.myra.transport;
 
 import express.mvp.myra.transport.util.NativeThread;
+import express.mvp.myra.transport.iouring.IoUringBackend;
+import express.mvp.myra.transport.iouring.LibUring;
 import express.mvp.roray.utils.concurrent.MpscRingBuffer;
 import java.lang.foreign.MemorySegment;
 import java.net.SocketAddress;
@@ -71,6 +73,15 @@ public final class TcpTransport implements Transport {
 
     /** CPU core to pin the poller thread to (-1 for no affinity). */
     private final int cpuAffinity;
+
+    /** io_uring buffer strategy (may be ignored for non-io_uring backends). */
+    private final TransportConfig.BufferMode bufferMode;
+
+    /** Minimum payload size (bytes) before attempting SEND_ZC. */
+    private final int zeroCopySendMinBytes;
+
+    /** Cached io_uring backend for mode-specific features. */
+    private final IoUringBackend ioUringBackend;
 
     /** Connection state flag. */
     private volatile boolean connected = false;
@@ -144,6 +155,15 @@ public final class TcpTransport implements Transport {
     /** Token for the currently pending receive operation. */
     private long currentReceiveToken;
 
+    /** Whether a multishot receive is active (buffer ring mode). */
+    private boolean multishotReceiveActive;
+
+    /** One-time log guard for BUFFER_RING receive failures. */
+    private boolean bufferRingReceiveFailureLogged;
+
+    /** If true, BUFFER_RING is disabled for this transport instance and we fall back to STANDARD. */
+    private boolean bufferRingReceiveDisabled;
+
     // ─────────────────────────────────────────────────────────────────────────
     // Pending send tracking
     // ─────────────────────────────────────────────────────────────────────────
@@ -157,6 +177,19 @@ public final class TcpTransport implements Transport {
     /** Circular buffer tracking buffers pending send completion. */
     private final RegisteredBuffer[] pendingSends = new RegisteredBuffer[PENDING_SENDS_SIZE];
 
+    /** Tracks whether a pending send is awaiting a SEND_ZC notification CQE. */
+    private final boolean[] pendingSendsAwaitingNotif = new boolean[PENDING_SENDS_SIZE];
+
+    /** Tracks whether a pending send was submitted via SEND_ZC. */
+    private final boolean[] pendingSendsZeroCopy = new boolean[PENDING_SENDS_SIZE];
+
+    /** Tracks whether a pending send was submitted using fixed-buffer fast path. */
+    private final boolean[] pendingSendsFixed = new boolean[PENDING_SENDS_SIZE];
+
+    /** Tracks whether a send has been retried on the standard path. */
+    private final boolean[] pendingSendsRetried = new boolean[PENDING_SENDS_SIZE];
+
+
     /**
      * Creates a new TCP transport with the specified backend and configuration.
      *
@@ -169,11 +202,16 @@ public final class TcpTransport implements Transport {
             TransportBackend backend,
             RegisteredBufferPool bufferPool,
             SocketAddress remoteAddress,
-            int cpuAffinity) {
+            int cpuAffinity,
+            TransportConfig.BufferMode bufferMode,
+            int zeroCopySendMinBytes) {
         this.backend = backend;
         this.bufferPool = bufferPool;
         this.remoteAddress = remoteAddress;
         this.cpuAffinity = cpuAffinity;
+        this.bufferMode = bufferMode;
+        this.zeroCopySendMinBytes = zeroCopySendMinBytes;
+        this.ioUringBackend = backend instanceof IoUringBackend iob ? iob : null;
 
         this.pollerThread = new Thread(this::pollLoop, "transport-poller");
         this.pollerThread.setDaemon(true);
@@ -196,13 +234,38 @@ public final class TcpTransport implements Transport {
     private void postReceive() {
         if (closed) return;
         try {
-            RegisteredBuffer buffer = bufferPool.acquire();
             long token = tokenGenerator.incrementAndGet() | RECEIVE_TOKEN_MASK;
 
+            // BUFFER_RING: single multishot op, kernel picks buffers.
+            if (bufferMode == TransportConfig.BufferMode.BUFFER_RING
+                    && ioUringBackend != null
+                    && !bufferRingReceiveDisabled) {
+                if (!ioUringBackend.isBufferRingEnabled()) {
+                    ioUringBackend.initBufferRing();
+                }
+
+                if (ioUringBackend.isBufferRingEnabled()) {
+                    this.currentReceiveToken = token;
+                    this.multishotReceiveActive = true;
+                    if (ioUringBackend.submitMultishotRecvWithBufferRing(token)) {
+                        return;
+                    }
+
+                    // Submission failed; fall back to standard receive.
+                    this.multishotReceiveActive = false;
+                }
+                // If buffer ring isn't available, fall back to standard.
+            }
+
+            RegisteredBuffer buffer = bufferPool.acquire();
             this.currentReceiveBuffer = buffer;
             this.currentReceiveToken = token;
 
-            backend.receive(buffer, token);
+            if (bufferMode == TransportConfig.BufferMode.FIXED && ioUringBackend != null) {
+                ioUringBackend.receiveFixedBuffer(buffer, token);
+            } else {
+                backend.receive(buffer, token);
+            }
         } catch (Exception e) {
             if (!closed) {
                 e.printStackTrace(); // TODO: Handle receive failure gracefully
@@ -229,8 +292,8 @@ public final class TcpTransport implements Transport {
         }
 
         // Completion handler for all I/O operations
-        CompletionHandler completionHandler =
-                (token, result) -> {
+        IoUringBackend.ExtendedCompletionHandler completionHandler =
+            (token, result, flags) -> {
                     if (handler == null) return;
 
                     // Decode operation type from token flags
@@ -240,23 +303,87 @@ public final class TcpTransport implements Transport {
                     if (isReceive) {
                         // Handle receive completion
                         if (token == currentReceiveToken) {
-                            RegisteredBuffer buffer = currentReceiveBuffer;
-                            // Clear current before callback to allow re-posting
-                            currentReceiveBuffer = null;
-                            currentReceiveToken = 0;
-
-                            if (result >= 0) {
-                                // Successful receive
-                                buffer.limit(result);
-                                handler.onDataReceived(buffer.segment().asSlice(0, result));
-                                buffer.close();
-                                postReceive(); // Post next receive
-                            } else {
-                                buffer.close();
-                                if (result == -1) { // EOF - connection closed by peer
+                            if (multishotReceiveActive
+                                    && bufferMode == TransportConfig.BufferMode.BUFFER_RING
+                                    && ioUringBackend != null) {
+                                // Buffer ring multishot receive: bufferId is encoded in CQE flags.
+                                if (result >= 0) {
+                                    int bufferId = ((flags & LibUring.IORING_CQE_F_BUFFER) != 0)
+                                            ? ((flags >> 16) & 0xFFFF)
+                                            : -1;
+                                    MemorySegment buf = ioUringBackend.getBufferRingBuffer(bufferId);
+                                    if (buf != null) {
+                                        handler.onDataReceived(buf.asSlice(0, result));
+                                        ioUringBackend.recycleBufferRingBuffer(bufferId);
+                                    } else {
+                                        if (!bufferRingReceiveFailureLogged) {
+                                            bufferRingReceiveFailureLogged = true;
+                                            System.err.println(
+                                                    "Warning: BUFFER_RING recv without buffer id (res="
+                                                            + result
+                                                            + ", flags=0x"
+                                                            + Integer.toHexString(flags)
+                                                            + ") - falling back to STANDARD");
+                                        }
+                                        multishotReceiveActive = false;
+                                        bufferRingReceiveDisabled = true;
+                                        postReceive();
+                                        return;
+                                    }
+                                } else if (result == -1) {
                                     close();
                                 } else {
-                                    postReceive(); // Retry on transient errors
+                                    if (!bufferRingReceiveFailureLogged) {
+                                        bufferRingReceiveFailureLogged = true;
+                                        System.err.println(
+                                                "Warning: BUFFER_RING recv failed (res="
+                                                        + result
+                                                        + ", flags=0x"
+                                                        + Integer.toHexString(flags)
+                                                        + ") - falling back to STANDARD");
+                                    }
+                                    multishotReceiveActive = false;
+                                    bufferRingReceiveDisabled = true;
+                                    postReceive();
+                                    return;
+                                }
+
+                                // If multishot ended, restart it.
+                                if ((flags & LibUring.IORING_CQE_F_MORE) == 0 && !closed) {
+                                    ioUringBackend.submitMultishotRecvWithBufferRing(token);
+                                }
+                            } else {
+                                RegisteredBuffer buffer = currentReceiveBuffer;
+                                // Clear current before callback to allow re-posting
+                                currentReceiveBuffer = null;
+                                currentReceiveToken = 0;
+
+                                if (buffer != null) {
+                                    if (result < 0
+                                            && bufferMode == TransportConfig.BufferMode.FIXED
+                                            && ioUringBackend != null
+                                            && (result == -22 || result == -95)) {
+                                        // Fixed-buffer fast path rejected; retry as standard.
+                                        currentReceiveBuffer = buffer;
+                                        currentReceiveToken = token;
+                                        backend.receive(buffer, token);
+                                        return;
+                                    }
+
+                                    if (result >= 0) {
+                                        // Successful receive
+                                        buffer.limit(result);
+                                        handler.onDataReceived(buffer.segment().asSlice(0, result));
+                                        buffer.close();
+                                        postReceive(); // Post next receive
+                                    } else {
+                                        buffer.close();
+                                        if (result == -1) { // EOF - connection closed by peer
+                                            close();
+                                        } else {
+                                            postReceive(); // Retry on transient errors
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -296,17 +423,95 @@ public final class TcpTransport implements Transport {
                                 return;
                             }
 
-                            // Token matches - safe to process this completion
-                            pendingSends[index] = null; // Clear reference
+                            boolean isNotif = (flags & LibUring.IORING_CQE_F_NOTIF) != 0;
 
-                            if (result >= 0) {
-                                buf.close();
-                                handler.onSendComplete(actualUserToken);
+                            boolean wasZeroCopy = pendingSendsZeroCopy[index];
+                            boolean wasFixed = pendingSendsFixed[index];
+
+                            if (wasZeroCopy) {
+                                if (isNotif) {
+                                    // Notification: safe to reuse buffer now.
+                                    if (pendingSendsAwaitingNotif[index]) {
+                                        pendingSendsAwaitingNotif[index] = false;
+                                        pendingSends[index] = null;
+                                        pendingSendsZeroCopy[index] = false;
+                                        pendingSendsFixed[index] = false;
+                                        pendingSendsRetried[index] = false;
+                                        buf.close();
+                                    }
+                                    return;
+                                }
+
+                                if (result < 0
+                                        && !pendingSendsRetried[index]
+                                        && (result == -22 || result == -95)) {
+                                    // Zero-copy not supported / invalid for this socket. Retry as standard.
+                                    pendingSendsRetried[index] = true;
+                                    pendingSendsZeroCopy[index] = false;
+                                    pendingSendsAwaitingNotif[index] = false;
+                                    backend.send(buf, actualUserToken);
+                                    return;
+                                }
+
+                                if (result >= 0) {
+                                    // Send CQE: notify app, keep buffer until NOTIF.
+                                    pendingSendsAwaitingNotif[index] = true;
+                                    handler.onSendComplete(actualUserToken);
+                                } else {
+                                    // Failure: release immediately.
+                                    pendingSendsAwaitingNotif[index] = false;
+                                    pendingSends[index] = null;
+                                    pendingSendsZeroCopy[index] = false;
+                                    pendingSendsFixed[index] = false;
+                                    pendingSendsRetried[index] = false;
+                                    buf.close();
+                                    handler.onSendFailed(
+                                            actualUserToken,
+                                            new TransportException("Operation failed: " + result));
+                                }
+                            } else if (wasFixed) {
+                                if (result < 0
+                                        && !pendingSendsRetried[index]
+                                        && (result == -22 || result == -95)) {
+                                    // Fixed-buffer fast path not supported. Retry as standard.
+                                    pendingSendsRetried[index] = true;
+                                    pendingSendsFixed[index] = false;
+                                    backend.send(buf, actualUserToken);
+                                    return;
+                                }
+
+                                pendingSends[index] = null;
+                                pendingSendsAwaitingNotif[index] = false;
+                                pendingSendsZeroCopy[index] = false;
+                                pendingSendsFixed[index] = false;
+                                pendingSendsRetried[index] = false;
+
+                                if (result >= 0) {
+                                    buf.close();
+                                    handler.onSendComplete(actualUserToken);
+                                } else {
+                                    buf.close();
+                                    handler.onSendFailed(
+                                            actualUserToken,
+                                            new TransportException("Operation failed: " + result));
+                                }
                             } else {
-                                buf.close();
-                                handler.onSendFailed(
-                                        actualUserToken,
-                                        new TransportException("Operation failed: " + result));
+                                // Token matches - safe to process this completion
+                                pendingSends[index] = null; // Clear reference
+                                pendingSendsAwaitingNotif[index] = false;
+                                pendingSendsZeroCopy[index] = false;
+                                pendingSendsFixed[index] = false;
+                                pendingSendsRetried[index] = false;
+
+                                if (result >= 0) {
+                                    buf.close();
+                                    handler.onSendComplete(actualUserToken);
+                                } else {
+                                    buf.close();
+                                    handler.onSendFailed(
+                                            actualUserToken,
+                                            new TransportException("Operation failed: " + result));
+                                }
                             }
                         }
                     }
@@ -343,7 +548,15 @@ public final class TcpTransport implements Transport {
             if (cmd instanceof RegisteredBuffer) {
                 // Send command
                 RegisteredBuffer buffer = (RegisteredBuffer) cmd;
-                backend.send(buffer, buffer.getToken());
+                long token = buffer.getToken();
+                int index = (int) (token & PENDING_SENDS_MASK);
+                if (pendingSendsZeroCopy[index] && ioUringBackend != null) {
+                    ioUringBackend.sendZeroCopy(buffer, token);
+                } else if (pendingSendsFixed[index] && ioUringBackend != null) {
+                    ioUringBackend.sendFixedBuffer(buffer, token);
+                } else {
+                    backend.send(buffer, token);
+                }
             } else if (cmd instanceof ConnectCommand) {
                 // Connect command
                 ConnectCommand cc = (ConnectCommand) cmd;
@@ -431,10 +644,22 @@ public final class TcpTransport implements Transport {
 
         // Track pending send for completion handling
         pendingSends[index] = buffer;
+        pendingSendsAwaitingNotif[index] = false;
+        pendingSendsRetried[index] = false;
+        pendingSendsZeroCopy[index] =
+            bufferMode == TransportConfig.BufferMode.ZERO_COPY
+                && ioUringBackend != null
+                && data.byteSize() >= zeroCopySendMinBytes;
+        pendingSendsFixed[index] =
+            bufferMode == TransportConfig.BufferMode.FIXED && ioUringBackend != null;
 
         // Submit to poller thread
         if (!commandQueue.offer(buffer)) {
             pendingSends[index] = null;
+            pendingSendsAwaitingNotif[index] = false;
+            pendingSendsZeroCopy[index] = false;
+            pendingSendsFixed[index] = false;
+            pendingSendsRetried[index] = false;
             buffer.close();
             throw new TransportException("Command queue full");
         }

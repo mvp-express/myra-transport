@@ -57,6 +57,9 @@ public final class TransportConfig {
     /** The selected I/O backend implementation. */
     private final BackendType backendType;
 
+    /** io_uring buffer strategy (standard, fixed buffers, buffer rings, zero-copy send). */
+    private final BufferMode bufferMode;
+
     /** Configuration for registered buffer pool. */
     private final RegisteredBuffersConfig registeredBuffersConfig;
 
@@ -75,6 +78,9 @@ public final class TransportConfig {
     /** SQPOLL idle timeout in milliseconds before kernel thread sleeps. */
     private final int sqPollIdleTimeout;
 
+    /** Minimum payload size (bytes) before attempting SEND_ZC in ZERO_COPY mode. */
+    private final int zeroCopySendMinBytes;
+
     /**
      * Creates a new configuration from a builder.
      *
@@ -82,12 +88,14 @@ public final class TransportConfig {
      */
     private TransportConfig(Builder builder) {
         this.backendType = builder.backendType;
+        this.bufferMode = builder.bufferMode;
         this.registeredBuffersConfig = builder.registeredBuffersConfig;
         this.connectionTimeout = builder.connectionTimeout;
         this.cpuAffinity = builder.cpuAffinity;
         this.sqPollCpuAffinity = builder.sqPollCpuAffinity;
         this.sqPollEnabled = builder.sqPollEnabled;
         this.sqPollIdleTimeout = builder.sqPollIdleTimeout;
+        this.zeroCopySendMinBytes = builder.zeroCopySendMinBytes;
     }
 
     /**
@@ -106,6 +114,34 @@ public final class TransportConfig {
      */
     public BackendType backendType() {
         return backendType;
+    }
+
+    /**
+     * Returns the configured buffer strategy.
+     *
+     * <p>This primarily affects the io_uring backend.
+     */
+    public BufferMode bufferMode() {
+        return bufferMode;
+    }
+
+    /**
+     * Buffer strategy for io_uring.
+     *
+     * <p>Notes:
+     *
+     * <ul>
+     *   <li>{@link #STANDARD}: regular send/recv
+     *   <li>{@link #FIXED}: use registered-buffer fast path (IORING_RECVSEND_FIXED_BUF)
+     *   <li>{@link #BUFFER_RING}: use provided buffer ring + multishot recv (Linux 5.19+)
+     *   <li>{@link #ZERO_COPY}: use SEND_ZC for sends (receives still use standard path)
+     * </ul>
+     */
+    public enum BufferMode {
+        STANDARD,
+        FIXED,
+        BUFFER_RING,
+        ZERO_COPY
     }
 
     /**
@@ -170,6 +206,17 @@ public final class TransportConfig {
     }
 
     /**
+     * Returns the minimum payload size (bytes) before attempting SEND_ZC.
+     *
+     * <p>This setting is only used when {@link #bufferMode()} is {@link BufferMode#ZERO_COPY}.
+     * Small payloads typically do not benefit from SEND_ZC; using a threshold avoids unnecessary
+     * kernel feature usage.
+     */
+    public int zeroCopySendMinBytes() {
+        return zeroCopySendMinBytes;
+    }
+
+    /**
      * Available I/O backend implementations.
      *
      * <p>The backend determines the underlying I/O mechanism used for network operations. Different
@@ -216,6 +263,7 @@ public final class TransportConfig {
      */
     public static final class Builder {
         private BackendType backendType = BackendType.IO_URING;
+        private BufferMode bufferMode = BufferMode.STANDARD;
         private RegisteredBuffersConfig registeredBuffersConfig =
                 RegisteredBuffersConfig.defaults();
         private Duration connectionTimeout = Duration.ofSeconds(5);
@@ -223,6 +271,7 @@ public final class TransportConfig {
         private int sqPollCpuAffinity = -1;
         private boolean sqPollEnabled = false;
         private int sqPollIdleTimeout = 2000; // 2 seconds default
+        private int zeroCopySendMinBytes = 2048;
 
         /**
          * Sets the I/O backend type.
@@ -233,6 +282,12 @@ public final class TransportConfig {
          */
         public Builder backendType(BackendType backendType) {
             this.backendType = Objects.requireNonNull(backendType);
+            return this;
+        }
+
+        /** Sets the io_uring buffer strategy (ignored by non-io_uring backends). */
+        public Builder bufferMode(BufferMode bufferMode) {
+            this.bufferMode = Objects.requireNonNull(bufferMode);
             return this;
         }
 
@@ -306,6 +361,17 @@ public final class TransportConfig {
          */
         public Builder sqPollIdleTimeout(int millis) {
             this.sqPollIdleTimeout = millis;
+            return this;
+        }
+
+        /**
+         * Sets the minimum payload size (bytes) before attempting SEND_ZC.
+         *
+         * <p>Use 0 to always attempt SEND_ZC for all payload sizes.
+         */
+        public Builder zeroCopySendMinBytes(int bytes) {
+            if (bytes < 0) throw new IllegalArgumentException("zeroCopySendMinBytes must be >= 0");
+            this.zeroCopySendMinBytes = bytes;
             return this;
         }
 

@@ -291,6 +291,12 @@ public final class IoUringBackend implements TransportBackend {
     /** Whether buffer ring has been successfully initialized and registered. */
     private boolean bufferRingEnabled = false;
 
+    /** Guard to ensure we don't repeatedly allocate/register a failing buffer ring. */
+    private boolean bufferRingInitAttempted = false;
+
+    /** Last errno observed while attempting to register the buffer ring (0 if none). */
+    private int bufferRingInitErrno = 0;
+
     /** Current number of entries in the buffer ring. */
     private int bufferRingSize = DEFAULT_BUFFER_RING_SIZE;
 
@@ -522,6 +528,16 @@ public final class IoUringBackend implements TransportBackend {
      * @return true if buffer ring was successfully initialized
      */
     public boolean initBufferRing(int nentries, int bufSize, short bgid) {
+        if (bufferRingEnabled) {
+            return true;
+        }
+
+        if (bufferRingInitAttempted) {
+            return false;
+        }
+
+        bufferRingInitAttempted = true;
+
         if (!LibUring.isBufferRingSupported()) {
             System.err.println("Warning: Buffer ring not supported in this liburing version");
             return false;
@@ -545,11 +561,13 @@ public final class IoUringBackend implements TransportBackend {
         long entrySize = LibUring.IO_URING_BUF_LAYOUT.byteSize();
         long ringSize = headerSize + (nentries * entrySize);
 
-        // Allocate ring memory
-        this.bufferRingMemory = arena.allocate(ringSize);
+        // Allocate ring memory.
+        // Kernel expects the provided buffer ring to be at least page-aligned (commonly 4KB),
+        // otherwise io_uring_register_buf_ring may fail with -EINVAL.
+        this.bufferRingMemory = arena.allocate(ringSize, 4096);
 
         // Allocate buffer memory (contiguous for cache efficiency)
-        this.bufferRingBuffers = arena.allocate((long) nentries * bufSize);
+        this.bufferRingBuffers = arena.allocate((long) nentries * bufSize, 4096);
 
         // Initialize the ring header
         LibUring.bufferRingInit(bufferRingMemory);
@@ -567,6 +585,7 @@ public final class IoUringBackend implements TransportBackend {
         // Register with io_uring
         int ret = LibUring.registerBufferRing(ringMemory, bufferRingMemory, nentries, bgid);
         if (ret < 0) {
+            bufferRingInitErrno = -ret;
             System.err.println("Warning: Failed to register buffer ring: errno=" + (-ret));
             bufferRingMemory = null;
             bufferRingBuffers = null;
@@ -634,10 +653,14 @@ public final class IoUringBackend implements TransportBackend {
         int mask = bufferRingSize - 1;
         long bufAddr = bufferRingBuffers.address() + ((long) bufferId * bufferRingBufSize);
 
-        // Add buffer back to ring at current tail position
-        // Read tail, add buffer, advance tail
+        // The kernel consumes buffers from the ring in tail order.
+        // When recycling, we must write the entry at the *current tail position* and then
+        // advance tail. Using bufferId as the ring index would advance tail without populating
+        // the slot the kernel will consume next, eventually stalling receives.
+        int tail = bufferRingMemory.get(ValueLayout.JAVA_SHORT, 14) & 0xFFFF;
+
         LibUring.bufferRingAdd(
-                bufferRingMemory, bufAddr, bufferRingBufSize, (short) bufferId, mask, bufferId);
+                bufferRingMemory, bufAddr, bufferRingBufSize, (short) bufferId, mask, tail);
         LibUring.bufferRingAdvance(bufferRingMemory, 1);
     }
 
@@ -669,7 +692,7 @@ public final class IoUringBackend implements TransportBackend {
 
         MemorySegment sqe = sqeResult.sqe();
         ringState.queuedSqes++;
-        LibUring.prepRecvMultishotBufferSelect(sqe, fd, bufferRingGroupId, 0);
+        LibUring.prepRecvMultishotBufferSelect(sqe, fd, bufferRingGroupId, bufferRingBufSize, 0);
         LibUring.sqeSetUserData(sqe, token);
 
         return true;
@@ -968,6 +991,11 @@ public final class IoUringBackend implements TransportBackend {
         if (count <= 0 || bufferIndices == null || lengths == null || tokens == null) {
             return 0;
         }
+
+        if (bufferPool == null) {
+            return 0;
+        }
+
         count = Math.min(
                 count,
                 Math.min(bufferIndices.length, Math.min(lengths.length, tokens.length)));
@@ -987,11 +1015,19 @@ public final class IoUringBackend implements TransportBackend {
             MemorySegment sqe = sqeResult.sqe();
             ringState.queuedSqes++;
 
+            int bufferIndex = bufferIndices[i] & 0xFFFF;
+            RegisteredBuffer[] all = bufferPool.getAllBuffers();
+            if (bufferIndex < 0 || bufferIndex >= all.length) {
+                break;
+            }
+            MemorySegment buf = bufferPool.getBufferSegment(all[bufferIndex]);
+
             // Use fixed buffer + fixed file if available
             if (useFixedFile) {
-                LibUring.prepRecvFixed(sqe, fixedFileIndex, bufferIndices[i], lengths[i], 0);
+                LibUring.prepRecvFixedBuf(
+                        sqe, fixedFileIndex, buf, lengths[i], bufferIndices[i], 0);
             } else {
-                LibUring.prepRecvFixed(sqe, fd, bufferIndices[i], lengths[i], 0);
+                LibUring.prepRecvFixedBuf(sqe, fd, buf, lengths[i], bufferIndices[i], 0);
             }
             LibUring.sqeSetUserData(sqe, tokens[i]);
 
@@ -999,6 +1035,72 @@ public final class IoUringBackend implements TransportBackend {
         }
 
         return submitted;
+    }
+
+    /**
+     * Send using registered-buffer fast path (IORING_RECVSEND_FIXED_BUF).
+     *
+     * <p>Falls back to regular send if fixed-file optimization is inactive.
+     */
+    public void sendFixedBuffer(RegisteredBuffer buffer, long token) {
+        if (!initialized) {
+            throw new IllegalStateException("Backend not initialized");
+        }
+
+        SqeAcquisitionResult sqeResult = acquireSqeWithRetry(5);
+        if (!sqeResult.success()) {
+            failedSends.incrementAndGet();
+            throw new TransportException("Failed to acquire SQE");
+        }
+        MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
+
+        int fd = useFixedFile ? fixedFileIndex : socketFd;
+        if (fd < 0) {
+            failedSends.incrementAndGet();
+            throw new TransportException("Not connected");
+        }
+
+        LibUring.prepSendFixedBuf(
+                sqe,
+                fd,
+                buffer.segment(),
+                (int) buffer.remaining(),
+                (short) buffer.index(),
+                0);
+        LibUring.sqeSetUserData(sqe, token);
+        sendCount.incrementAndGet();
+    }
+
+    /** Receive using registered-buffer fast path (IORING_RECVSEND_FIXED_BUF). */
+    public void receiveFixedBuffer(RegisteredBuffer buffer, long token) {
+        if (!initialized) {
+            throw new IllegalStateException("Backend not initialized");
+        }
+
+        SqeAcquisitionResult sqeResult = acquireSqeWithRetry(5);
+        if (!sqeResult.success()) {
+            failedReceives.incrementAndGet();
+            throw new TransportException("Failed to acquire SQE");
+        }
+        MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
+
+        int fd = useFixedFile ? fixedFileIndex : socketFd;
+        if (fd < 0) {
+            failedReceives.incrementAndGet();
+            throw new TransportException("Not connected");
+        }
+
+        LibUring.prepRecvFixedBuf(
+                sqe,
+                fd,
+                buffer.segment(),
+                (int) buffer.capacity(),
+                (short) buffer.index(),
+                0);
+        LibUring.sqeSetUserData(sqe, token);
+        receiveCount.incrementAndGet();
     }
 
     /**
