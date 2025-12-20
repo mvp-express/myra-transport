@@ -1,20 +1,19 @@
-name: Build and Publish Versioned Javadoc
+name: Build and Publish Latest Javadoc
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: "javadoc-pages"
-  cancel-in-progress: false
+  group: "javadoc-latest"
+  cancel-in-progress: true
 
 jobs:
-  publish-javadoc:
+  publish-latest-javadoc:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,22 +29,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Generate Javadoc
-        run: ./gradlew aggregateJavadoc
+        run: ./gradlew --no-configuration-cache aggregateJavadoc
 
-      - name: Compute version
-        id: vars
-        run: |
-          version="$GITHUB_REF_NAME"
-          version="${version//\//-}"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Publish versioned Javadoc
+      - name: Publish latest Javadoc
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: build/docs/javadoc
-          destination_dir: ${{ steps.vars.outputs.version }}
+          destination_dir: latest
           keep_files: true
 
       - name: Checkout gh-pages (for index)
@@ -57,18 +49,12 @@ jobs:
           fetch-depth: 1
 
       - name: Generate index.html
-        env:
-          CURRENT_VERSION: ${{ steps.vars.outputs.version }}
         run: |
           mkdir -p site
 
           versions=""
           if [ -d gh-pages ]; then
             versions=$(find gh-pages -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | grep -v '^latest$' | sort -V || true)
-          fi
-
-          if [ -n "${CURRENT_VERSION:-}" ]; then
-            versions=$(printf "%s\n%s\n" "$versions" "$CURRENT_VERSION" | sed '/^$/d' | sort -V | uniq)
           fi
 
           {

@@ -935,6 +935,103 @@ public final class LibUring {
         }
     }
 
+    /**
+     * Cached CQ accessors for hot-path polling.
+     *
+     * <p>{@link #peekCqe(MemorySegment, MemorySegment)} and {@link #cqeSeen(MemorySegment,
+     * MemorySegment)} are implemented in Java because liburing exposes them as static inline. The
+     * naive implementation recreates multiple {@link MemorySegment} views on every call.
+     *
+     * <p>This helper caches the stable CQ pointers (khead/ktail) and the CQEs array view so that
+     * the poll loop only allocates the per-CQE slice, significantly reducing allocation pressure
+     * and improving tail latency.
+     */
+    public static final class CqFastPath {
+        private final MemorySegment kheadPtr;
+        private final MemorySegment ktailPtr;
+        private final int mask;
+        private final MemorySegment cqesArray;
+        private final long cqeSize;
+
+        private static final long CQE_USER_DATA_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("user_data"));
+        private static final long CQE_RES_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("res"));
+        private static final long CQE_FLAGS_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("flags"));
+
+        private CqFastPath(MemorySegment ring) {
+            MemorySegment cq = ring.asSlice(CQ_OFFSET, IO_URING_CQ_LAYOUT.byteSize());
+
+            MemorySegment khead = cq.get(ValueLayout.ADDRESS, CQ_KHEAD_OFFSET);
+            this.kheadPtr = khead.reinterpret(Integer.BYTES);
+
+            MemorySegment ktail = cq.get(ValueLayout.ADDRESS, CQ_KTAIL_OFFSET);
+            this.ktailPtr = ktail.reinterpret(Integer.BYTES);
+
+            this.mask = cq.get(ValueLayout.JAVA_INT, CQ_RING_MASK_OFFSET);
+
+            MemorySegment cqes = cq.get(ValueLayout.ADDRESS, CQ_CQES_OFFSET);
+            this.cqeSize = IO_URING_CQE_LAYOUT.byteSize();
+            this.cqesArray = cqes.reinterpret((long) (mask + 1) * cqeSize);
+        }
+
+        /** @return CQ head if CQE available, -1 if none */
+        public int peekHead() {
+            int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
+            int tail = ktailPtr.get(ValueLayout.JAVA_INT, 0);
+            return (head == tail) ? -1 : head;
+        }
+
+        public long cqeUserData(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_LONG, base + CQE_USER_DATA_OFFSET);
+        }
+
+        public int cqeRes(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_INT, base + CQE_RES_OFFSET);
+        }
+
+        public int cqeFlags(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_INT, base + CQE_FLAGS_OFFSET);
+        }
+
+        /** @return 0 if CQE available, -EAGAIN if not */
+        public int peekCqe(MemorySegment cqePtr) {
+            int head = peekHead();
+            if (head < 0) {
+                return -EAGAIN;
+            }
+
+            // Compatibility path: produce a CQE view segment for callers that still want it.
+            int index = head & mask;
+            MemorySegment cqe = cqesArray.asSlice((long) index * cqeSize, cqeSize);
+            cqePtr.set(ValueLayout.ADDRESS, 0, cqe);
+            return 0;
+        }
+
+        /** Increment CQ head to mark the next CQE as consumed. */
+        public void cqeSeen() {
+            int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
+            kheadPtr.set(ValueLayout.JAVA_INT, 0, head + 1);
+        }
+
+        /** Increment CQ head using a previously read head value. */
+        public void cqeSeen(int head) {
+            kheadPtr.set(ValueLayout.JAVA_INT, 0, head + 1);
+        }
+    }
+
+    /** Create a cached CQ accessor for the given ring. */
+    public static CqFastPath createCqFastPath(MemorySegment ring) {
+        return new CqFastPath(ring);
+    }
+
     /** Prepare a connect operation. */
     public static void prepConnect(MemorySegment sqe, int fd, MemorySegment addr, int addrlen) {
         clearSqe(sqe);

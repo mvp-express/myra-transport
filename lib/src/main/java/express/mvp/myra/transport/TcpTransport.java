@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * ┌─────────────────────────────────────────────────────────────┐
  * │                      TcpTransport                           │
  * ├─────────────────────────────────────────────────────────────┤
- * │  Application Thread         │        Poller Thread          │
+ * │  Application Thread        │        Poller Thread           │
  * │  ─────────────────         │        ─────────────           │
  * │  • connect()               │        • pollLoop()            │
  * │  • send()                  │        • processCommands()     │
