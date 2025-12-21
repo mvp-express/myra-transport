@@ -1111,7 +1111,9 @@ public final class LibUring {
     public static final byte IORING_OP_CONNECT = 16;
     public static final byte IORING_OP_SEND = 26;
     public static final byte IORING_OP_RECV = 27;
-    public static final byte IORING_OP_SEND_ZC = 46;
+    // Keep in sync with linux uapi enum io_uring_op (see /usr/include/linux/io_uring.h).
+    // On modern kernels 46 is IORING_OP_URING_CMD; SEND_ZC is 47.
+    public static final byte IORING_OP_SEND_ZC = 47;
     // P1: Multishot receive operation (Linux 5.16+)
     // In io_uring uapi this is a bit in sqe->ioprio for recv/recvmsg.
     public static final byte IORING_OP_RECV_MULTISHOT = 27; // Same opcode as RECV, but with ioprio flag
