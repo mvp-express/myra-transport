@@ -9,55 +9,69 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * io_uring-based transport backend for maximum I/O performance on Linux.
  *
- * <p>This backend leverages Linux's io_uring interface (introduced in kernel 5.1) to achieve
- * significantly higher throughput and lower latency compared to traditional NIO. It implements the
+ * <p>
+ * This backend leverages Linux's io_uring interface (introduced in kernel 5.1)
+ * to achieve
+ * significantly higher throughput and lower latency compared to traditional
+ * NIO. It implements the
  * {@link TransportBackend} interface with io_uring-specific optimizations.
  *
  * <h2>Performance Characteristics</h2>
  *
  * <ul>
- *   <li><b>1.7x throughput improvement</b> vs NIO with registered buffers (pre-validated memory
- *       regions eliminate per-operation address validation overhead)
- *   <li><b>100x syscall reduction</b> with batch submission (multiple operations submitted in a
- *       single io_uring_submit() call)
- *   <li><b>2-5μs end-to-end latency</b> vs 50-100μs for NIO (measured ping-pong)
- *   <li><b>SQPOLL mode</b> (optional): Kernel thread polls submission queue, eliminating submit
- *       syscalls entirely for additional 2-5x improvement
+ * <li><b>1.7x throughput improvement</b> vs NIO with registered buffers
+ * (pre-validated memory
+ * regions eliminate per-operation address validation overhead)
+ * <li><b>100x syscall reduction</b> with batch submission (multiple operations
+ * submitted in a
+ * single io_uring_submit() call)
+ * <li><b>2-5μs end-to-end latency</b> vs 50-100μs for NIO (measured ping-pong)
+ * <li><b>SQPOLL mode</b> (optional): Kernel thread polls submission queue,
+ * eliminating submit
+ * syscalls entirely for additional 2-5x improvement
  * </ul>
  *
  * <h2>Architecture</h2>
  *
- * <p>The backend manages:
+ * <p>
+ * The backend manages:
  *
  * <ul>
- *   <li><b>Ring Memory</b>: Shared memory region containing submission and completion queues
- *   <li><b>Buffer Pool</b>: Pre-registered memory buffers for zero-copy I/O
- *   <li><b>Fixed Files</b>: Pre-registered file descriptors for faster fd lookup
- *   <li><b>Pre-allocated Structures</b>: Timespec, sockaddr, iovec to avoid hot-path allocations
+ * <li><b>Ring Memory</b>: Shared memory region containing submission and
+ * completion queues
+ * <li><b>Buffer Pool</b>: Pre-registered memory buffers for zero-copy I/O
+ * <li><b>Fixed Files</b>: Pre-registered file descriptors for faster fd lookup
+ * <li><b>Pre-allocated Structures</b>: Timespec, sockaddr, iovec to avoid
+ * hot-path allocations
  * </ul>
  *
  * <h2>Advanced Features</h2>
  *
  * <ul>
- *   <li><b>Zero-Copy Send (SEND_ZC)</b>: {@link #sendZeroCopy} avoids user→kernel data copy
- *   <li><b>Multi-Shot Receive</b>: {@link #receiveMultishot} keeps recv active across completions
- *   <li><b>Buffer Rings</b>: {@link #initBufferRing} enables kernel-managed buffer selection
- *   <li><b>Linked Operations</b>: {@link #submitLinkedEcho} chains recv→send for echo patterns
- *   <li><b>Batch Operations</b>: {@link #submitBatchRecv} / {@link #submitBatchSend} for bulk I/O
+ * <li><b>Zero-Copy Send (SEND_ZC)</b>: {@link #sendZeroCopy} avoids user→kernel
+ * data copy
+ * <li><b>Multi-Shot Receive</b>: {@link #receiveMultishot} keeps recv active
+ * across completions
+ * <li><b>Buffer Rings</b>: {@link #initBufferRing} enables kernel-managed
+ * buffer selection
+ * <li><b>Linked Operations</b>: {@link #submitLinkedEcho} chains recv→send for
+ * echo patterns
+ * <li><b>Batch Operations</b>: {@link #submitBatchRecv} /
+ * {@link #submitBatchSend} for bulk I/O
  * </ul>
  *
  * <h2>Usage Example</h2>
  *
  * <pre>{@code
  * TransportConfig config = TransportConfig.builder()
- *     .backendType(BackendType.IO_URING)
- *     .registeredBuffers(RegisteredBuffersConfig.builder()
- *         .numBuffers(256)
- *         .bufferSize(65536)
- *         .build())
- *     .sqPollEnabled(true)
- *     .sqPollCpuAffinity(3)
- *     .build();
+ *         .backendType(BackendType.IO_URING)
+ *         .registeredBuffers(RegisteredBuffersConfig.builder()
+ *                 .numBuffers(256)
+ *                 .bufferSize(65536)
+ *                 .build())
+ *         .sqPollEnabled(true)
+ *         .sqPollCpuAffinity(3)
+ *         .build();
  *
  * IoUringBackend backend = new IoUringBackend();
  * backend.initialize(config);
@@ -70,42 +84,52 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h2>Requirements</h2>
  *
  * <ul>
- *   <li>Linux kernel 5.1+ (5.6+ recommended, 6.0+ for zero-copy send)
- *   <li>liburing installed (liburing.so, typically from liburing-dev package)
- *   <li>Java 21+ with --enable-native-access=ALL-UNNAMED
+ * <li>Linux kernel 5.1+ (5.6+ recommended, 6.0+ for zero-copy send)
+ * <li>liburing installed (liburing.so, typically from liburing-dev package)
+ * <li>Java 21+ with --enable-native-access=ALL-UNNAMED
  * </ul>
  *
  * @see LibUring Low-level io_uring FFM bindings
  * @see TransportBackend Backend interface this class implements
- * @see express.mvp.myra.transport.nio.NioBackend NioBackend - Cross-platform fallback when io_uring
- *     is unavailable
+ * @see express.mvp.myra.transport.nio.NioBackend NioBackend - Cross-platform
+ *      fallback when io_uring
+ *      is unavailable
  */
 public final class IoUringBackend implements TransportBackend {
 
     // ========== Core io_uring State ==========
 
     /**
-     * Arena for off-heap memory management. Uses shared arena for thread-safe access. All
+     * Arena for off-heap memory management. Uses shared arena for thread-safe
+     * access. All
      * pre-allocated memory segments are tied to this arena's lifecycle.
      */
     private final Arena arena;
 
     /**
-     * Memory segment containing the io_uring structure. This is the main handle to the io_uring
-     * instance, containing both SQ and CQ. Layout defined by {@link LibUring#IO_URING_LAYOUT}.
+     * Memory segment containing the io_uring structure. This is the main handle to
+     * the io_uring
+     * instance, containing both SQ and CQ. Layout defined by
+     * {@link LibUring#IO_URING_LAYOUT}.
      */
     private final MemorySegment ringMemory;
 
     /**
-     * Pre-allocated pointer for CQE retrieval during polling. Reused across poll/wait calls to
+     * Pre-allocated pointer for CQE retrieval during polling. Reused across
+     * poll/wait calls to
      * avoid allocation on hot path. Points to the current CQE being processed.
      */
     private final MemorySegment cqePtr;
 
-    /** Buffer pool for zero-copy I/O operations. Registered with io_uring for 1.7x speedup. */
+    /**
+     * Buffer pool for zero-copy I/O operations. Registered with io_uring for 1.7x
+     * speedup.
+     */
     private RegisteredBufferPoolImpl bufferPool;
 
-    /** Transport configuration including SQPOLL settings and buffer configuration. */
+    /**
+     * Transport configuration including SQPOLL settings and buffer configuration.
+     */
     private TransportConfig config;
 
     /** Flag indicating whether initialize() has been called successfully. */
@@ -115,7 +139,8 @@ public final class IoUringBackend implements TransportBackend {
     private volatile boolean closed = false;
 
     /**
-     * Whether this backend owns the ring and is responsible for cleanup. False for backends created
+     * Whether this backend owns the ring and is responsible for cleanup. False for
+     * backends created
      * via {@link #createFromAccepted(int)}.
      */
     private final boolean ownsRing;
@@ -129,7 +154,10 @@ public final class IoUringBackend implements TransportBackend {
     /** Whether fixed file optimization is active for the current socket. */
     private boolean useFixedFile = false;
 
-    /** Index in the registered files table for the current socket (-1 if not registered). */
+    /**
+     * Index in the registered files table for the current socket (-1 if not
+     * registered).
+     */
     private int fixedFileIndex = -1;
 
     // ========== Socket Management ==========
@@ -137,7 +165,10 @@ public final class IoUringBackend implements TransportBackend {
     /** Raw file descriptor for the socket. -1 when not connected. */
     private int socketFd = -1;
 
-    /** Current connection state (DISCONNECTED, CONNECTING, CONNECTED, CLOSING, CLOSED). */
+    /**
+     * Current connection state (DISCONNECTED, CONNECTING, CONNECTED, CLOSING,
+     * CLOSED).
+     */
     private volatile ConnectionState connectionState = ConnectionState.DISCONNECTED;
 
     // ========== Statistics Counters ==========
@@ -170,25 +201,58 @@ public final class IoUringBackend implements TransportBackend {
     /** Number of times SQ was full and required flush before getting SQE. */
     private final AtomicLong ringOverflows = new AtomicLong(0);
 
+    // ========== Poller-Thread Submission Tracking ==========
+    // Tracks how many SQEs have been prepared but not yet submitted.
+    // This avoids calling io_uring_submit() in tight loops when no new work exists.
+    //
+    // Intended usage: single poller thread owns submissions (see
+    // TcpTransport.pollLoop()).
+
+    /**
+     * Shared state for all backend instances that share a single io_uring ring.
+     *
+     * <p>
+     * Important: {@link #createFromAccepted(int)} creates child backends that share
+     * the same
+     * ring memory. Submission gating must therefore be per-ring, not
+     * per-backend-instance.
+     */
+    private static final class SharedRingState {
+        private int queuedSqes = 0;
+    }
+
+    private final SharedRingState ringState;
+
+    /** Cached CQ accessors for fast polling (reduces per-peek allocations). */
+    private LibUring.CqFastPath cqFastPath;
+
+    /** Max number of CQEs to drain per poll() / waitForCompletion() call. */
+    private static final int MAX_CQES_PER_POLL = 32;
+
     // ========== Pre-allocated Structures for Zero-Allocation Hot Path ==========
     // These structures are allocated once and reused to avoid GC pressure.
 
     /**
-     * Pre-allocated kernel timespec for waitForCompletion(). Layout: tv_sec (8 bytes) + tv_nsec (8
+     * Pre-allocated kernel timespec for waitForCompletion(). Layout: tv_sec (8
+     * bytes) + tv_nsec (8
      * bytes) = 16 bytes. Reused across calls - just update values.
      */
     private final MemorySegment preAllocatedTimespec;
 
     /**
-     * Pre-allocated sockaddr_in for connection operations. Layout: sin_family (2) + sin_port (2) +
-     * sin_addr (4) + padding (8) = 16 bytes. Reserved for future use in zero-allocation connect
+     * Pre-allocated sockaddr_in for connection operations. Layout: sin_family (2) +
+     * sin_port (2) +
+     * sin_addr (4) + padding (8) = 16 bytes. Reserved for future use in
+     * zero-allocation connect
      * path.
      */
     private final MemorySegment preAllocatedSockaddr;
 
     /**
-     * Pre-allocated iovec for single-buffer scatter/gather operations. Layout: iov_base (8 bytes
-     * pointer) + iov_len (8 bytes) = 16 bytes. Reserved for future use in zero-allocation I/O path.
+     * Pre-allocated iovec for single-buffer scatter/gather operations. Layout:
+     * iov_base (8 bytes
+     * pointer) + iov_len (8 bytes) = 16 bytes. Reserved for future use in
+     * zero-allocation I/O path.
      */
     private final MemorySegment preAllocatedIovec;
 
@@ -215,7 +279,8 @@ public final class IoUringBackend implements TransportBackend {
     private static final short DEFAULT_BUFFER_GROUP_ID = 0;
 
     /**
-     * Memory segment containing the buffer ring header and entry pointers. Layout: 16-byte header +
+     * Memory segment containing the buffer ring header and entry pointers. Layout:
+     * 16-byte header +
      * (nentries * 16-byte entries).
      */
     private MemorySegment bufferRingMemory;
@@ -225,6 +290,12 @@ public final class IoUringBackend implements TransportBackend {
 
     /** Whether buffer ring has been successfully initialized and registered. */
     private boolean bufferRingEnabled = false;
+
+    /** Guard to ensure we don't repeatedly allocate/register a failing buffer ring. */
+    private boolean bufferRingInitAttempted = false;
+
+    /** Last errno observed while attempting to register the buffer ring (0 if none). */
+    private int bufferRingInitErrno = 0;
 
     /** Current number of entries in the buffer ring. */
     private int bufferRingSize = DEFAULT_BUFFER_RING_SIZE;
@@ -238,10 +309,14 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Creates a new io_uring backend with default configuration.
      *
-     * <p>Allocates the io_uring structure and pre-allocated hot-path structures. The backend must
+     * <p>
+     * Allocates the io_uring structure and pre-allocated hot-path structures. The
+     * backend must
      * be initialized via {@link #initialize(TransportConfig)} before use.
      *
-     * <p>This constructor creates a backend that owns the io_uring ring and is responsible for
+     * <p>
+     * This constructor creates a backend that owns the io_uring ring and is
+     * responsible for
      * cleanup when closed.
      */
     public IoUringBackend() {
@@ -249,6 +324,7 @@ public final class IoUringBackend implements TransportBackend {
         this.ringMemory = arena.allocate(LibUring.IO_URING_LAYOUT);
         this.cqePtr = arena.allocate(ValueLayout.ADDRESS);
         this.ownsRing = true;
+        this.ringState = new SharedRingState();
 
         // Pre-allocate hot path structures to eliminate allocations during I/O
         this.preAllocatedTimespec = arena.allocate(LibUring.KERNEL_TIMESPEC_LAYOUT);
@@ -259,18 +335,25 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Creates a child backend from an existing ring (for accepted connections).
      *
-     * <p>This constructor is used internally by {@link #createFromAccepted(int)} to create a
-     * backend for an accepted client connection that shares the parent's io_uring ring and buffer
+     * <p>
+     * This constructor is used internally by {@link #createFromAccepted(int)} to
+     * create a
+     * backend for an accepted client connection that shares the parent's io_uring
+     * ring and buffer
      * pool.
      *
-     * <p>Child backends do not own the ring and will not close it when closed.
+     * <p>
+     * Child backends do not own the ring and will not close it when closed.
      *
      * @param ringMemory shared ring memory from parent backend
-     * @param config transport configuration from parent
+     * @param config     transport configuration from parent
      * @param bufferPool shared buffer pool from parent
      */
     private IoUringBackend(
-            MemorySegment ringMemory, TransportConfig config, RegisteredBufferPoolImpl bufferPool) {
+            MemorySegment ringMemory,
+            TransportConfig config,
+            RegisteredBufferPoolImpl bufferPool,
+            SharedRingState ringState) {
         this.arena = Arena.ofShared();
         this.ringMemory = ringMemory;
         this.cqePtr = arena.allocate(ValueLayout.ADDRESS);
@@ -278,6 +361,7 @@ public final class IoUringBackend implements TransportBackend {
         this.config = config;
         this.bufferPool = bufferPool;
         this.initialized = true;
+        this.ringState = ringState;
 
         // Pre-allocate hot path structures to eliminate allocations during I/O
         this.preAllocatedTimespec = arena.allocate(LibUring.KERNEL_TIMESPEC_LAYOUT);
@@ -311,7 +395,8 @@ public final class IoUringBackend implements TransportBackend {
             int flags = LibUring.IORING_SETUP_SQPOLL;
 
             // COOP_TASKRUN: Reduces interrupt overhead by cooperatively running tasks
-            // Note: SINGLE_ISSUER is incompatible with SQPOLL (kernel thread also accesses ring)
+            // Note: SINGLE_ISSUER is incompatible with SQPOLL (kernel thread also accesses
+            // ring)
             flags |= LibUring.IORING_SETUP_COOP_TASKRUN;
 
             if (config.sqPollCpuAffinity() >= 0) {
@@ -366,11 +451,13 @@ public final class IoUringBackend implements TransportBackend {
             throw new TransportException("Failed to initialize io_uring: errno=" + (-ret));
         }
 
+        // Cache CQ pointers for hot-path polling.
+        this.cqFastPath = LibUring.createCqFastPath(ringMemory);
+
         // Register files if owner
         if (ownsRing) {
             try (Arena tempArena = Arena.ofConfined()) {
-                MemorySegment files =
-                        tempArena.allocate(ValueLayout.JAVA_INT, MAX_REGISTERED_FILES);
+                MemorySegment files = tempArena.allocate(ValueLayout.JAVA_INT, MAX_REGISTERED_FILES);
                 files.fill((byte) -1);
                 int retFiles = LibUring.registerFiles(ringMemory, files, MAX_REGISTERED_FILES);
                 if (retFiles < 0) {
@@ -405,9 +492,8 @@ public final class IoUringBackend implements TransportBackend {
         MemorySegment iovecs = arena.allocate(LibUring.IOVEC_LAYOUT, numBuffers);
 
         for (int i = 0; i < numBuffers; i++) {
-            MemorySegment iovec =
-                    iovecs.asSlice(
-                            i * LibUring.IOVEC_LAYOUT.byteSize(), LibUring.IOVEC_LAYOUT.byteSize());
+            MemorySegment iovec = iovecs.asSlice(
+                    i * LibUring.IOVEC_LAYOUT.byteSize(), LibUring.IOVEC_LAYOUT.byteSize());
             MemorySegment bufferSegment = bufferPool.getBufferSegment(buffers[i]);
 
             // Set iov_base (pointer to buffer)
@@ -431,15 +517,27 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Initialize a buffer ring for kernel-managed buffer selection.
      *
-     * <p>Buffer rings enable the most efficient multishot receive pattern where the kernel
+     * <p>
+     * Buffer rings enable the most efficient multishot receive pattern where the
+     * kernel
      * automatically selects buffers from a pre-registered pool.
      *
      * @param nentries number of buffer ring entries (must be power of 2)
-     * @param bufSize size of each buffer in the ring
-     * @param bgid buffer group ID (unique per io_uring instance)
+     * @param bufSize  size of each buffer in the ring
+     * @param bgid     buffer group ID (unique per io_uring instance)
      * @return true if buffer ring was successfully initialized
      */
     public boolean initBufferRing(int nentries, int bufSize, short bgid) {
+        if (bufferRingEnabled) {
+            return true;
+        }
+
+        if (bufferRingInitAttempted) {
+            return false;
+        }
+
+        bufferRingInitAttempted = true;
+
         if (!LibUring.isBufferRingSupported()) {
             System.err.println("Warning: Buffer ring not supported in this liburing version");
             return false;
@@ -463,11 +561,13 @@ public final class IoUringBackend implements TransportBackend {
         long entrySize = LibUring.IO_URING_BUF_LAYOUT.byteSize();
         long ringSize = headerSize + (nentries * entrySize);
 
-        // Allocate ring memory
-        this.bufferRingMemory = arena.allocate(ringSize);
+        // Allocate ring memory.
+        // Kernel expects the provided buffer ring to be at least page-aligned (commonly 4KB),
+        // otherwise io_uring_register_buf_ring may fail with -EINVAL.
+        this.bufferRingMemory = arena.allocate(ringSize, 4096);
 
         // Allocate buffer memory (contiguous for cache efficiency)
-        this.bufferRingBuffers = arena.allocate((long) nentries * bufSize);
+        this.bufferRingBuffers = arena.allocate((long) nentries * bufSize, 4096);
 
         // Initialize the ring header
         LibUring.bufferRingInit(bufferRingMemory);
@@ -485,6 +585,7 @@ public final class IoUringBackend implements TransportBackend {
         // Register with io_uring
         int ret = LibUring.registerBufferRing(ringMemory, bufferRingMemory, nentries, bgid);
         if (ret < 0) {
+            bufferRingInitErrno = -ret;
             System.err.println("Warning: Failed to register buffer ring: errno=" + (-ret));
             bufferRingMemory = null;
             bufferRingBuffers = null;
@@ -496,7 +597,8 @@ public final class IoUringBackend implements TransportBackend {
     }
 
     /**
-     * Initialize buffer ring with default parameters. Uses 256 entries of 8KB each with group ID 0.
+     * Initialize buffer ring with default parameters. Uses 256 entries of 8KB each
+     * with group ID 0.
      *
      * @return true if buffer ring was successfully initialized
      */
@@ -524,7 +626,8 @@ public final class IoUringBackend implements TransportBackend {
     }
 
     /**
-     * Get a buffer from the buffer ring by ID. Used after receiving a CQE with IORING_CQE_F_BUFFER
+     * Get a buffer from the buffer ring by ID. Used after receiving a CQE with
+     * IORING_CQE_F_BUFFER
      * set.
      *
      * @param bufferId buffer ID from CQE
@@ -550,17 +653,23 @@ public final class IoUringBackend implements TransportBackend {
         int mask = bufferRingSize - 1;
         long bufAddr = bufferRingBuffers.address() + ((long) bufferId * bufferRingBufSize);
 
-        // Add buffer back to ring at current tail position
-        // Read tail, add buffer, advance tail
+        // The kernel consumes buffers from the ring in tail order.
+        // When recycling, we must write the entry at the *current tail position* and then
+        // advance tail. Using bufferId as the ring index would advance tail without populating
+        // the slot the kernel will consume next, eventually stalling receives.
+        int tail = bufferRingMemory.get(ValueLayout.JAVA_SHORT, 14) & 0xFFFF;
+
         LibUring.bufferRingAdd(
-                bufferRingMemory, bufAddr, bufferRingBufSize, (short) bufferId, mask, bufferId);
+                bufferRingMemory, bufAddr, bufferRingBufSize, (short) bufferId, mask, tail);
         LibUring.bufferRingAdvance(bufferRingMemory, 1);
     }
 
     /**
      * Submit a multishot receive with buffer ring selection.
      *
-     * <p>This is the most efficient receive pattern - the kernel automatically selects buffers from
+     * <p>
+     * This is the most efficient receive pattern - the kernel automatically selects
+     * buffers from
      * the ring and continues receiving without resubmission.
      *
      * @param token user token for completion tracking
@@ -582,7 +691,8 @@ public final class IoUringBackend implements TransportBackend {
         }
 
         MemorySegment sqe = sqeResult.sqe();
-        LibUring.prepRecvMultishotBufferSelect(sqe, fd, bufferRingGroupId, 0);
+        ringState.queuedSqes++;
+        LibUring.prepRecvMultishotBufferSelect(sqe, fd, bufferRingGroupId, bufferRingBufSize, 0);
         LibUring.sqeSetUserData(sqe, token);
 
         return true;
@@ -593,20 +703,23 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Submit a linked recv+send echo pattern.
      *
-     * <p>This creates two linked SQEs:
+     * <p>
+     * This creates two linked SQEs:
      *
      * <ol>
-     *   <li>recv - receive data into buffer
-     *   <li>send - send the same data back (linked, executes after recv)
+     * <li>recv - receive data into buffer
+     * <li>send - send the same data back (linked, executes after recv)
      * </ol>
      *
-     * <p>The send only executes after recv completes successfully. If recv fails, the linked send
+     * <p>
+     * The send only executes after recv completes successfully. If recv fails, the
+     * linked send
      * is cancelled automatically.
      *
      * @param recvBuffer buffer for receiving data
-     * @param recvLen max bytes to receive
-     * @param recvToken token for recv completion
-     * @param sendToken token for send completion
+     * @param recvLen    max bytes to receive
+     * @param recvToken  token for recv completion
+     * @param sendToken  token for send completion
      * @return true if both SQEs were submitted successfully
      */
     public boolean submitLinkedEcho(
@@ -628,6 +741,7 @@ public final class IoUringBackend implements TransportBackend {
 
         MemorySegment sqeRecv = sqeResult1.sqe();
         MemorySegment sqeSend = sqeResult2.sqe();
+        ringState.queuedSqes += 2;
 
         // Setup recv with LINK flag
         LibUring.prepRecv(sqeRecv, fd, recvBuffer, recvLen, 0);
@@ -644,12 +758,14 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Submit linked recv+send with skip on success for efficient echo.
      *
-     * <p>Like submitLinkedEcho, but uses CQE_SKIP_SUCCESS on the recv to reduce CQE overhead. Only
+     * <p>
+     * Like submitLinkedEcho, but uses CQE_SKIP_SUCCESS on the recv to reduce CQE
+     * overhead. Only
      * the send completion is generated on success.
      *
      * @param recvBuffer buffer for receiving/sending data
-     * @param recvLen max bytes to receive
-     * @param sendToken token for completion (only send generates CQE)
+     * @param recvLen    max bytes to receive
+     * @param sendToken  token for completion (only send generates CQE)
      * @return true if submission was successful
      */
     public boolean submitLinkedEchoSkipRecvCqe(
@@ -671,6 +787,7 @@ public final class IoUringBackend implements TransportBackend {
 
         MemorySegment sqeRecv = sqeResult1.sqe();
         MemorySegment sqeSend = sqeResult2.sqe();
+        ringState.queuedSqes += 2;
 
         // Setup recv with LINK + CQE_SKIP_SUCCESS
         LibUring.prepRecv(sqeRecv, fd, recvBuffer, recvLen, 0);
@@ -688,15 +805,17 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Submit linked send+recv for request-response pattern.
      *
-     * <p>Useful for RPC clients that send a request and expect a response. The recv only starts
+     * <p>
+     * Useful for RPC clients that send a request and expect a response. The recv
+     * only starts
      * after the send completes.
      *
      * @param sendBuffer buffer containing request data
-     * @param sendLen bytes to send
+     * @param sendLen    bytes to send
      * @param recvBuffer buffer for response
-     * @param recvLen max response bytes
-     * @param sendToken token for send completion
-     * @param recvToken token for recv completion
+     * @param recvLen    max response bytes
+     * @param sendToken  token for send completion
+     * @param recvToken  token for recv completion
      * @return true if submission was successful
      */
     public boolean submitLinkedRequestResponse(
@@ -724,6 +843,7 @@ public final class IoUringBackend implements TransportBackend {
 
         MemorySegment sqeSend = sqeResult1.sqe();
         MemorySegment sqeRecv = sqeResult2.sqe();
+        ringState.queuedSqes += 2;
 
         // Setup send with LINK flag
         LibUring.prepSend(sqeSend, fd, sendBuffer, sendLen, 0);
@@ -740,7 +860,8 @@ public final class IoUringBackend implements TransportBackend {
     // ========== P3: Fixed File & Batch Receive API ==========
 
     /**
-     * Check if fixed file optimization is active for this backend. Fixed files eliminate the fd
+     * Check if fixed file optimization is active for this backend. Fixed files
+     * eliminate the fd
      * lookup overhead in each operation.
      *
      * @return true if using fixed file index
@@ -761,14 +882,17 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Submit a batch of receive operations for maximum throughput.
      *
-     * <p>This submits multiple recv SQEs in a single call, which is more efficient than submitting
-     * them one at a time. Useful for high-throughput scenarios where you want to have multiple
+     * <p>
+     * This submits multiple recv SQEs in a single call, which is more efficient
+     * than submitting
+     * them one at a time. Useful for high-throughput scenarios where you want to
+     * have multiple
      * outstanding receives.
      *
      * @param buffers array of receive buffers
      * @param lengths array of buffer lengths
-     * @param tokens array of user tokens for tracking
-     * @param count number of operations to submit
+     * @param tokens  array of user tokens for tracking
+     * @param count   number of operations to submit
      * @return number of operations successfully queued
      */
     public int submitBatchRecv(MemorySegment[] buffers, int[] lengths, long[] tokens, int count) {
@@ -790,6 +914,7 @@ public final class IoUringBackend implements TransportBackend {
             }
 
             MemorySegment sqe = sqeResult.sqe();
+            ringState.queuedSqes++;
 
             if (useFixedFile) {
                 LibUring.prepRecvFixedFile(sqe, fixedFileIndex, buffers[i], lengths[i], 0);
@@ -809,8 +934,8 @@ public final class IoUringBackend implements TransportBackend {
      *
      * @param buffers array of send buffers
      * @param lengths array of data lengths
-     * @param tokens array of user tokens for tracking
-     * @param count number of operations to submit
+     * @param tokens  array of user tokens for tracking
+     * @param count   number of operations to submit
      * @return number of operations successfully queued
      */
     public int submitBatchSend(MemorySegment[] buffers, int[] lengths, long[] tokens, int count) {
@@ -832,6 +957,7 @@ public final class IoUringBackend implements TransportBackend {
             }
 
             MemorySegment sqe = sqeResult.sqe();
+            ringState.queuedSqes++;
 
             if (useFixedFile) {
                 LibUring.prepSendFixedFile(sqe, fixedFileIndex, buffers[i], lengths[i], 0);
@@ -849,13 +975,15 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Submit a batch of recv operations using registered buffers.
      *
-     * <p>Uses pre-registered buffer indices for zero-copy receive. More efficient than regular recv
+     * <p>
+     * Uses pre-registered buffer indices for zero-copy receive. More efficient than
+     * regular recv
      * as it avoids buffer address translation.
      *
      * @param bufferIndices indices of registered buffers
-     * @param lengths max lengths for each recv
-     * @param tokens user tokens for tracking
-     * @param count number of operations
+     * @param lengths       max lengths for each recv
+     * @param tokens        user tokens for tracking
+     * @param count         number of operations
      * @return number of operations successfully queued
      */
     public int submitBatchRecvRegistered(
@@ -863,10 +991,14 @@ public final class IoUringBackend implements TransportBackend {
         if (count <= 0 || bufferIndices == null || lengths == null || tokens == null) {
             return 0;
         }
-        count =
-                Math.min(
-                        count,
-                        Math.min(bufferIndices.length, Math.min(lengths.length, tokens.length)));
+
+        if (bufferPool == null) {
+            return 0;
+        }
+
+        count = Math.min(
+                count,
+                Math.min(bufferIndices.length, Math.min(lengths.length, tokens.length)));
 
         int fd = useFixedFile ? fixedFileIndex : socketFd;
         if (fd < 0) {
@@ -881,12 +1013,21 @@ public final class IoUringBackend implements TransportBackend {
             }
 
             MemorySegment sqe = sqeResult.sqe();
+            ringState.queuedSqes++;
+
+            int bufferIndex = bufferIndices[i] & 0xFFFF;
+            RegisteredBuffer[] all = bufferPool.getAllBuffers();
+            if (bufferIndex < 0 || bufferIndex >= all.length) {
+                break;
+            }
+            MemorySegment buf = bufferPool.getBufferSegment(all[bufferIndex]);
 
             // Use fixed buffer + fixed file if available
             if (useFixedFile) {
-                LibUring.prepRecvFixed(sqe, fixedFileIndex, bufferIndices[i], lengths[i], 0);
+                LibUring.prepRecvFixedBuf(
+                        sqe, fixedFileIndex, buf, lengths[i], bufferIndices[i], 0);
             } else {
-                LibUring.prepRecvFixed(sqe, fd, bufferIndices[i], lengths[i], 0);
+                LibUring.prepRecvFixedBuf(sqe, fd, buf, lengths[i], bufferIndices[i], 0);
             }
             LibUring.sqeSetUserData(sqe, tokens[i]);
 
@@ -897,18 +1038,102 @@ public final class IoUringBackend implements TransportBackend {
     }
 
     /**
+     * Send using registered-buffer fast path (IORING_RECVSEND_FIXED_BUF).
+     *
+     * <p>Falls back to regular send if fixed-file optimization is inactive.
+     */
+    public void sendFixedBuffer(RegisteredBuffer buffer, long token) {
+        if (!initialized) {
+            throw new IllegalStateException("Backend not initialized");
+        }
+
+        SqeAcquisitionResult sqeResult = acquireSqeWithRetry(5);
+        if (!sqeResult.success()) {
+            failedSends.incrementAndGet();
+            throw new TransportException("Failed to acquire SQE");
+        }
+        MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
+
+        int fd = useFixedFile ? fixedFileIndex : socketFd;
+        if (fd < 0) {
+            failedSends.incrementAndGet();
+            throw new TransportException("Not connected");
+        }
+
+        LibUring.prepSendFixedBuf(
+                sqe,
+                fd,
+                buffer.segment(),
+                (int) buffer.remaining(),
+                (short) buffer.index(),
+                0);
+        LibUring.sqeSetUserData(sqe, token);
+        sendCount.incrementAndGet();
+    }
+
+    /** Receive using registered-buffer fast path (IORING_RECVSEND_FIXED_BUF). */
+    public void receiveFixedBuffer(RegisteredBuffer buffer, long token) {
+        if (!initialized) {
+            throw new IllegalStateException("Backend not initialized");
+        }
+
+        SqeAcquisitionResult sqeResult = acquireSqeWithRetry(5);
+        if (!sqeResult.success()) {
+            failedReceives.incrementAndGet();
+            throw new TransportException("Failed to acquire SQE");
+        }
+        MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
+
+        int fd = useFixedFile ? fixedFileIndex : socketFd;
+        if (fd < 0) {
+            failedReceives.incrementAndGet();
+            throw new TransportException("Not connected");
+        }
+
+        LibUring.prepRecvFixedBuf(
+                sqe,
+                fd,
+                buffer.segment(),
+                (int) buffer.capacity(),
+                (short) buffer.index(),
+                0);
+        LibUring.sqeSetUserData(sqe, token);
+        receiveCount.incrementAndGet();
+    }
+
+    /**
      * Force a single io_uring_submit syscall after queuing operations.
      *
-     * <p>This is useful when you've queued multiple operations and want to submit them all at once
+     * <p>
+     * This is useful when you've queued multiple operations and want to submit them
+     * all at once
      * for maximum batching efficiency.
      *
      * @return number of SQEs submitted to kernel
      */
     public int forceSubmit() {
+        if (!initialized) {
+            throw new IllegalStateException("Backend not initialized");
+        }
+
+        if (closed) {
+            return 0;
+        }
+
+        if (ringState.queuedSqes == 0) {
+            return 0;
+        }
+
         int ret = LibUring.submit(ringMemory);
+        totalSyscalls.incrementAndGet();
         if (ret > 0) {
             batchSubmissions.incrementAndGet();
-            totalSyscalls.incrementAndGet();
+            ringState.queuedSqes -= ret;
+            if (ringState.queuedSqes < 0) {
+                ringState.queuedSqes = 0;
+            }
         }
         return ret;
     }
@@ -960,15 +1185,15 @@ public final class IoUringBackend implements TransportBackend {
             if (!sqeResult.success()) {
                 LibUring.nativeClose(socketFd);
                 socketFd = -1;
-                String message =
-                        sqeResult.shouldRetry()
-                                ? "Submission queue full after 5 retries (ring overflows: "
-                                        + ringOverflows.get()
-                                        + ")"
-                                : "Failed to acquire SQE (ring might be corrupted)";
+                String message = sqeResult.shouldRetry()
+                        ? "Submission queue full after 5 retries (ring overflows: "
+                                + ringOverflows.get()
+                                + ")"
+                        : "Failed to acquire SQE (ring might be corrupted)";
                 throw new TransportException(message);
             }
             MemorySegment sqe = sqeResult.sqe();
+            ringState.queuedSqes++;
 
             // Prepare connect operation
             LibUring.prepConnect(sqe, socketFd, sockaddr, 16);
@@ -1087,15 +1312,15 @@ public final class IoUringBackend implements TransportBackend {
         // Get SQE for accept operation with overflow handling
         SqeAcquisitionResult sqeResult = acquireSqeWithRetry(5);
         if (!sqeResult.success()) {
-            String message =
-                    sqeResult.shouldRetry()
-                            ? "Submission queue full after 5 retries (ring overflows: "
-                                    + ringOverflows.get()
-                                    + ")"
-                            : "Failed to acquire SQE (ring might be corrupted)";
+            String message = sqeResult.shouldRetry()
+                    ? "Submission queue full after 5 retries (ring overflows: "
+                            + ringOverflows.get()
+                            + ")"
+                    : "Failed to acquire SQE (ring might be corrupted)";
             throw new TransportException(message);
         }
         MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
 
         // Prepare accept operation (null for addr and addrlen - we don't need client
         // address)
@@ -1124,6 +1349,7 @@ public final class IoUringBackend implements TransportBackend {
             throw new TransportException("Failed to acquire SQE");
         }
         MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
 
         // Prepare send
         if (useFixedFile) {
@@ -1141,19 +1367,25 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Send data using zero-copy mechanism (SEND_ZC).
      *
-     * <p>Zero-copy send avoids copying data from user-space to kernel-space, providing significant
+     * <p>
+     * Zero-copy send avoids copying data from user-space to kernel-space, providing
+     * significant
      * performance improvements for large buffers (typically 2KB+).
      *
-     * <p><b>IMPORTANT:</b>
+     * <p>
+     * <b>IMPORTANT:</b>
      *
      * <ul>
-     *   <li>You will receive TWO completions: one for send completion, one for notification
-     *   <li>The buffer must NOT be modified until the notification completion is received
-     *   <li>Check {@link LibUring#isZeroCopyNotification(MemorySegment)} in your completion handler
+     * <li>You will receive TWO completions: one for send completion, one for
+     * notification
+     * <li>The buffer must NOT be modified until the notification completion is
+     * received
+     * <li>Check {@link LibUring#isZeroCopyNotification(MemorySegment)} in your
+     * completion handler
      * </ul>
      *
      * @param buffer the registered buffer to send
-     * @param token user data token for completion tracking
+     * @param token  user data token for completion tracking
      */
     public void sendZeroCopy(RegisteredBuffer buffer, long token) {
         sendZeroCopy(buffer.segment(), (int) buffer.remaining(), token);
@@ -1162,9 +1394,9 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Send data using zero-copy mechanism (SEND_ZC).
      *
-     * @param data buffer containing data to send
+     * @param data   buffer containing data to send
      * @param length number of bytes to send
-     * @param token user data token for completion tracking
+     * @param token  user data token for completion tracking
      */
     public void sendZeroCopy(MemorySegment data, int length, long token) {
         if (!initialized) {
@@ -1178,6 +1410,7 @@ public final class IoUringBackend implements TransportBackend {
             throw new TransportException("Failed to acquire SQE for zero-copy send");
         }
         MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
 
         // Prepare zero-copy send
         // Note: Zero-copy works best with registered buffers and larger payloads
@@ -1205,6 +1438,7 @@ public final class IoUringBackend implements TransportBackend {
             throw new TransportException("Failed to acquire SQE");
         }
         MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
 
         // Prepare recv
         if (useFixedFile) {
@@ -1222,21 +1456,28 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Start a persistent multi-shot receive operation.
      *
-     * <p>Multi-shot receive keeps the SQE active and generates multiple CQEs until the operation is
-     * cancelled or an error occurs. This is ideal for persistent receive loops as it eliminates the
+     * <p>
+     * Multi-shot receive keeps the SQE active and generates multiple CQEs until the
+     * operation is
+     * cancelled or an error occurs. This is ideal for persistent receive loops as
+     * it eliminates the
      * need to resubmit after each receive.
      *
-     * <p><b>IMPORTANT:</b>
+     * <p>
+     * <b>IMPORTANT:</b>
      *
      * <ul>
-     *   <li>Check CQE flags for IORING_CQE_F_MORE - if set, more completions are coming
-     *   <li>If IORING_CQE_F_MORE is NOT set, the operation has terminated and must be resubmitted
-     *   <li>Use {@link LibUring#hasMoreCompletions(MemorySegment)} to check in completion handler
-     *   <li>Requires Linux 5.16+
+     * <li>Check CQE flags for IORING_CQE_F_MORE - if set, more completions are
+     * coming
+     * <li>If IORING_CQE_F_MORE is NOT set, the operation has terminated and must be
+     * resubmitted
+     * <li>Use {@link LibUring#hasMoreCompletions(MemorySegment)} to check in
+     * completion handler
+     * <li>Requires Linux 5.16+
      * </ul>
      *
      * @param buffer the registered buffer for receiving data
-     * @param token user data token for completion tracking
+     * @param token  user data token for completion tracking
      */
     public void receiveMultishot(RegisteredBuffer buffer, long token) {
         receiveMultishot(buffer.segment(), (int) buffer.capacity(), token);
@@ -1245,9 +1486,9 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Start a persistent multi-shot receive operation.
      *
-     * @param data buffer for receiving data
+     * @param data      buffer for receiving data
      * @param maxLength maximum bytes to receive per completion
-     * @param token user data token for completion tracking
+     * @param token     user data token for completion tracking
      */
     public void receiveMultishot(MemorySegment data, int maxLength, long token) {
         if (!initialized) {
@@ -1261,6 +1502,7 @@ public final class IoUringBackend implements TransportBackend {
             throw new TransportException("Failed to acquire SQE for multishot receive");
         }
         MemorySegment sqe = sqeResult.sqe();
+        ringState.queuedSqes++;
 
         // Prepare multishot recv
         LibUring.prepRecvMultishot(sqe, socketFd, data, maxLength, 0);
@@ -1275,10 +1517,22 @@ public final class IoUringBackend implements TransportBackend {
             throw new IllegalStateException("Backend not initialized");
         }
 
+        if (closed) {
+            return 0;
+        }
+
+        if (ringState.queuedSqes == 0) {
+            return 0;
+        }
+
         int submitted = LibUring.submit(ringMemory);
+        totalSyscalls.incrementAndGet();
         if (submitted > 0) {
             batchSubmissions.incrementAndGet();
-            totalSyscalls.incrementAndGet();
+            ringState.queuedSqes -= submitted;
+            if (ringState.queuedSqes < 0) {
+                ringState.queuedSqes = 0;
+            }
         }
         return submitted;
     }
@@ -1334,35 +1588,50 @@ public final class IoUringBackend implements TransportBackend {
             throw new IllegalStateException("Backend not initialized");
         }
 
-        try {
-            int ret = LibUring.peekCqe(ringMemory, cqePtr);
+        if (closed) {
+            return 0;
+        }
 
-            if (ret == 0) {
-                MemorySegment cqe = cqePtr.get(ValueLayout.ADDRESS, 0);
-                if (cqe != null && cqe.address() != 0) {
-                    cqe = cqe.reinterpret(LibUring.IO_URING_CQE_LAYOUT.byteSize());
-                    try {
-                        processCqe(cqe, handler);
-                    } catch (Throwable t) {
-                        System.err.println("Error processing CQE:");
-                        t.printStackTrace();
-                    } finally {
-                        LibUring.cqeSeen(ringMemory, cqe);
-                    }
-                    return 1;
+        int processed = 0;
+        try {
+            while (processed < MAX_CQES_PER_POLL) {
+                int ret = cqFastPath.peekCqe(cqePtr);
+                if (ret != 0) {
+                    break;
                 }
+
+                MemorySegment cqe = cqePtr.get(ValueLayout.ADDRESS, 0);
+                if (cqe == null || cqe.address() == 0) {
+                    break;
+                }
+
+                cqe = cqe.reinterpret(LibUring.IO_URING_CQE_LAYOUT.byteSize());
+                try {
+                    processCqe(cqe, handler);
+                } catch (Throwable t) {
+                    System.err.println("Error processing CQE:");
+                    t.printStackTrace();
+                } finally {
+                    cqFastPath.cqeSeen();
+                }
+
+                processed++;
             }
         } catch (Exception e) {
             // No CQE available or error - expected when no operations
         }
 
-        return 0;
+        return processed;
     }
 
     @Override
     public int waitForCompletion(long timeoutMillis, CompletionHandler handler) {
         if (!initialized) {
             throw new IllegalStateException("Backend not initialized");
+        }
+
+        if (closed) {
+            return 0;
         }
 
         int ret;
@@ -1380,23 +1649,56 @@ public final class IoUringBackend implements TransportBackend {
             ret = LibUring.waitCqe(ringMemory, cqePtr);
         }
 
-        if (ret == 0) {
-            MemorySegment cqe = cqePtr.get(ValueLayout.ADDRESS, 0);
-            if (cqe != null && cqe.address() != 0) {
-                cqe = cqe.reinterpret(LibUring.IO_URING_CQE_LAYOUT.byteSize());
+        if (ret != 0) {
+            return 0;
+        }
+
+        int processed = 0;
+
+        MemorySegment cqe = cqePtr.get(ValueLayout.ADDRESS, 0);
+        if (cqe != null && cqe.address() != 0) {
+            cqe = cqe.reinterpret(LibUring.IO_URING_CQE_LAYOUT.byteSize());
+            try {
+                processCqe(cqe, handler);
+            } catch (Throwable t) {
+                System.err.println("Error processing CQE in waitForCompletion:");
+                t.printStackTrace();
+            } finally {
+                cqFastPath.cqeSeen();
+            }
+            processed++;
+        }
+
+        // Drain any additional ready CQEs without blocking.
+        while (processed < MAX_CQES_PER_POLL) {
+            try {
+                int peekRet = cqFastPath.peekCqe(cqePtr);
+                if (peekRet != 0) {
+                    break;
+                }
+
+                MemorySegment nextCqe = cqePtr.get(ValueLayout.ADDRESS, 0);
+                if (nextCqe == null || nextCqe.address() == 0) {
+                    break;
+                }
+
+                nextCqe = nextCqe.reinterpret(LibUring.IO_URING_CQE_LAYOUT.byteSize());
                 try {
-                    processCqe(cqe, handler);
+                    processCqe(nextCqe, handler);
                 } catch (Throwable t) {
-                    System.err.println("Error processing CQE in waitForCompletion:");
+                    System.err.println("Error processing CQE in waitForCompletion drain:");
                     t.printStackTrace();
                 } finally {
-                    LibUring.cqeSeen(ringMemory, cqe);
+                    cqFastPath.cqeSeen();
                 }
-                return 1;
+
+                processed++;
+            } catch (Exception e) {
+                break;
             }
         }
 
-        return 0;
+        return processed;
     }
 
     private void processCqe(MemorySegment cqe, CompletionHandler handler) {
@@ -1437,25 +1739,28 @@ public final class IoUringBackend implements TransportBackend {
     /**
      * Extended completion handler that receives CQE flags.
      *
-     * <p>Use this interface when working with:
+     * <p>
+     * Use this interface when working with:
      *
      * <ul>
-     *   <li>Zero-copy send (SEND_ZC) - check for IORING_CQE_F_NOTIF
-     *   <li>Multi-shot receive - check for IORING_CQE_F_MORE
+     * <li>Zero-copy send (SEND_ZC) - check for IORING_CQE_F_NOTIF
+     * <li>Multi-shot receive - check for IORING_CQE_F_MORE
      * </ul>
      */
     public interface ExtendedCompletionHandler extends CompletionHandler {
         /**
          * Called when an operation completes with flags.
          *
-         * @param token user data token
+         * @param token  user data token
          * @param result operation result (bytes transferred or negative errno)
-         * @param flags CQE flags:
-         *     <ul>
-         *       <li>IORING_CQE_F_NOTIF (1 &lt;&lt; 3) - Zero-copy notification (buffer can be
-         *           reused)
-         *       <li>IORING_CQE_F_MORE (1 &lt;&lt; 1) - More completions coming (multishot active)
-         *     </ul>
+         * @param flags  CQE flags:
+         *               <ul>
+         *               <li>IORING_CQE_F_NOTIF (1 &lt;&lt; 3) - Zero-copy notification
+         *               (buffer can be
+         *               reused)
+         *               <li>IORING_CQE_F_MORE (1 &lt;&lt; 1) - More completions coming
+         *               (multishot active)
+         *               </ul>
          */
         void onComplete(long token, int result, int flags);
 
@@ -1488,8 +1793,7 @@ public final class IoUringBackend implements TransportBackend {
     @Override
     public BackendStats getStats() {
         long totalOps = sendCount.get() + receiveCount.get();
-        double avgBatchSize =
-                totalSyscalls.get() > 0 ? (double) totalOps / totalSyscalls.get() : 0.0;
+        double avgBatchSize = totalSyscalls.get() > 0 ? (double) totalOps / totalSyscalls.get() : 0.0;
 
         return BackendStats.builder()
                 .totalSends(sendCount.get())
@@ -1565,8 +1869,8 @@ public final class IoUringBackend implements TransportBackend {
             throw new IllegalArgumentException("Invalid handle: " + handle);
         }
 
-        IoUringBackend clientBackend =
-                new IoUringBackend(this.ringMemory, this.config, this.bufferPool);
+        IoUringBackend clientBackend = new IoUringBackend(this.ringMemory, this.config, this.bufferPool,
+                this.ringState);
         clientBackend.socketFd = handle;
         clientBackend.registerFile(handle);
 

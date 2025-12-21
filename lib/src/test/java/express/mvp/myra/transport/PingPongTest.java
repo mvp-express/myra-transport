@@ -76,7 +76,13 @@ class PingPongTest {
         }
         clientPool = new RegisteredBufferPoolImpl(16, 1024);
         cBackend.registerBufferPool(clientPool);
-        client = new TcpTransport(cBackend, clientPool, ADDRESS, -1);
+        client = new TcpTransport(
+            cBackend,
+            clientPool,
+            ADDRESS,
+            -1,
+            TransportConfig.BufferMode.STANDARD,
+            TransportConfig.builder().build().zeroCopySendMinBytes());
     }
 
     @ParameterizedTest

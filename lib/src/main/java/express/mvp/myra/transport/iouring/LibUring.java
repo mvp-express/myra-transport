@@ -1,7 +1,6 @@
 package express.mvp.myra.transport.iouring;
 
 import static express.mvp.roray.utils.functions.ErrnoCapture.EAGAIN;
-import static java.lang.foreign.MemoryLayout.paddingLayout;
 import static java.lang.foreign.MemoryLayout.structLayout;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
@@ -139,12 +138,11 @@ public final class LibUring {
      *  24: len (4)
      *  28: op_flags (4)
      *  32: user_data (8)
-     *  40: buf_index (2)
-     *  42: buf_group (2)
-     *  44: personality (4)
-     *  48: splice_fd_in (4)
-     *  52: __pad (4)
-     *  56: addr3 (8)
+         *  40: buf_index / buf_group (2)
+         *  42: personality (2)
+         *  44: splice_fd_in / file_index / addr_len (4)
+         *  48: addr3 (8)
+         *  56: __pad2 (8)
      * </pre>
      */
     public static final StructLayout IO_URING_SQE_LAYOUT =
@@ -158,12 +156,13 @@ public final class LibUring {
                             JAVA_INT.withName("len"),
                             JAVA_INT.withName("op_flags"),
                             JAVA_LONG.withName("user_data"),
-                            JAVA_SHORT.withName("buf_index"),
-                            JAVA_SHORT.withName("buf_group"),
-                            JAVA_INT.withName("personality"),
-                            JAVA_INT.withName("splice_fd_in"),
-                            paddingLayout(4),
-                            JAVA_LONG.withName("addr3"))
+                    // Note: buf_index and buf_group are a 2-byte union at the same offset.
+                    // We model the union as a single 16-bit field and write either meaning.
+                    JAVA_SHORT.withName("buf_index"),
+                    JAVA_SHORT.withName("personality"),
+                    JAVA_INT.withName("splice_fd_in"),
+                    JAVA_LONG.withName("addr3"),
+                    JAVA_LONG.withName("__pad2"))
                     .withName("io_uring_sqe");
 
     /**
@@ -209,7 +208,6 @@ public final class LibUring {
     private static final java.lang.invoke.VarHandle SQE_OP_FLAGS_VH = SQE.varHandle("op_flags");
     private static final java.lang.invoke.VarHandle SQE_USER_DATA_VH = SQE.varHandle("user_data");
     private static final java.lang.invoke.VarHandle SQE_BUF_INDEX_VH = SQE.varHandle("buf_index");
-    private static final java.lang.invoke.VarHandle SQE_BUF_GROUP_VH = SQE.varHandle("buf_group");
 
     // CQE field VarHandles
     private static final java.lang.invoke.VarHandle CQE_USER_DATA_VH = CQE.varHandle("user_data");
@@ -935,6 +933,103 @@ public final class LibUring {
         }
     }
 
+    /**
+     * Cached CQ accessors for hot-path polling.
+     *
+     * <p>{@link #peekCqe(MemorySegment, MemorySegment)} and {@link #cqeSeen(MemorySegment,
+     * MemorySegment)} are implemented in Java because liburing exposes them as static inline. The
+     * naive implementation recreates multiple {@link MemorySegment} views on every call.
+     *
+     * <p>This helper caches the stable CQ pointers (khead/ktail) and the CQEs array view so that
+     * the poll loop only allocates the per-CQE slice, significantly reducing allocation pressure
+     * and improving tail latency.
+     */
+    public static final class CqFastPath {
+        private final MemorySegment kheadPtr;
+        private final MemorySegment ktailPtr;
+        private final int mask;
+        private final MemorySegment cqesArray;
+        private final long cqeSize;
+
+        private static final long CQE_USER_DATA_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("user_data"));
+        private static final long CQE_RES_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("res"));
+        private static final long CQE_FLAGS_OFFSET =
+            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("flags"));
+
+        private CqFastPath(MemorySegment ring) {
+            MemorySegment cq = ring.asSlice(CQ_OFFSET, IO_URING_CQ_LAYOUT.byteSize());
+
+            MemorySegment khead = cq.get(ValueLayout.ADDRESS, CQ_KHEAD_OFFSET);
+            this.kheadPtr = khead.reinterpret(Integer.BYTES);
+
+            MemorySegment ktail = cq.get(ValueLayout.ADDRESS, CQ_KTAIL_OFFSET);
+            this.ktailPtr = ktail.reinterpret(Integer.BYTES);
+
+            this.mask = cq.get(ValueLayout.JAVA_INT, CQ_RING_MASK_OFFSET);
+
+            MemorySegment cqes = cq.get(ValueLayout.ADDRESS, CQ_CQES_OFFSET);
+            this.cqeSize = IO_URING_CQE_LAYOUT.byteSize();
+            this.cqesArray = cqes.reinterpret((long) (mask + 1) * cqeSize);
+        }
+
+        /** @return CQ head if CQE available, -1 if none */
+        public int peekHead() {
+            int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
+            int tail = ktailPtr.get(ValueLayout.JAVA_INT, 0);
+            return (head == tail) ? -1 : head;
+        }
+
+        public long cqeUserData(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_LONG, base + CQE_USER_DATA_OFFSET);
+        }
+
+        public int cqeRes(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_INT, base + CQE_RES_OFFSET);
+        }
+
+        public int cqeFlags(int head) {
+            int index = head & mask;
+            long base = (long) index * cqeSize;
+            return cqesArray.get(ValueLayout.JAVA_INT, base + CQE_FLAGS_OFFSET);
+        }
+
+        /** @return 0 if CQE available, -EAGAIN if not */
+        public int peekCqe(MemorySegment cqePtr) {
+            int head = peekHead();
+            if (head < 0) {
+                return -EAGAIN;
+            }
+
+            // Compatibility path: produce a CQE view segment for callers that still want it.
+            int index = head & mask;
+            MemorySegment cqe = cqesArray.asSlice((long) index * cqeSize, cqeSize);
+            cqePtr.set(ValueLayout.ADDRESS, 0, cqe);
+            return 0;
+        }
+
+        /** Increment CQ head to mark the next CQE as consumed. */
+        public void cqeSeen() {
+            int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
+            kheadPtr.set(ValueLayout.JAVA_INT, 0, head + 1);
+        }
+
+        /** Increment CQ head using a previously read head value. */
+        public void cqeSeen(int head) {
+            kheadPtr.set(ValueLayout.JAVA_INT, 0, head + 1);
+        }
+    }
+
+    /** Create a cached CQ accessor for the given ring. */
+    public static CqFastPath createCqFastPath(MemorySegment ring) {
+        return new CqFastPath(ring);
+    }
+
     /** Prepare a connect operation. */
     public static void prepConnect(MemorySegment sqe, int fd, MemorySegment addr, int addrlen) {
         clearSqe(sqe);
@@ -1016,10 +1111,18 @@ public final class LibUring {
     public static final byte IORING_OP_CONNECT = 16;
     public static final byte IORING_OP_SEND = 26;
     public static final byte IORING_OP_RECV = 27;
-    public static final byte IORING_OP_SEND_ZC = 46;
+    // Keep in sync with linux uapi enum io_uring_op (see /usr/include/linux/io_uring.h).
+    // On modern kernels 46 is IORING_OP_URING_CMD; SEND_ZC is 47.
+    public static final byte IORING_OP_SEND_ZC = 47;
     // P1: Multishot receive operation (Linux 5.16+)
-    public static final byte IORING_OP_RECV_MULTISHOT = 27; // Same opcode as RECV, but with flag
-    public static final int IORING_RECV_MULTISHOT = 1 << 1; // Flag for multishot mode
+    // In io_uring uapi this is a bit in sqe->ioprio for recv/recvmsg.
+    public static final byte IORING_OP_RECV_MULTISHOT = 27; // Same opcode as RECV, but with ioprio flag
+    public static final int IORING_RECV_MULTISHOT = 1 << 1;
+
+    // Registered (fixed) buffers for send/recv via sqe->ioprio.
+    // See liburing's IORING_RECVSEND_FIXED_BUF.
+    public static final int IORING_RECVSEND_FIXED_BUF = 1 << 2;
+    private static final java.lang.invoke.VarHandle SQE_IOPRIO_VH = SQE.varHandle("ioprio");
 
     // SQE Flags
     public static final int IOSQE_FIXED_FILE = 1 << 0;
@@ -1201,6 +1304,16 @@ public final class LibUring {
         SQE_FLAGS_VH.set(sqe, 0L, flags);
     }
 
+    /** Set SQE ioprio field (operation-specific flags for send/recv). */
+    public static void sqeSetIoprio(MemorySegment sqe, short ioprio) {
+        SQE_IOPRIO_VH.set(sqe, 0L, ioprio);
+    }
+
+    /** Get SQE ioprio field. */
+    public static short sqeGetIoprio(MemorySegment sqe) {
+        return (short) SQE_IOPRIO_VH.get(sqe, 0L);
+    }
+
     /** Set SQE fd field. */
     public static void sqeSetFd(MemorySegment sqe, int fd) {
         SQE_FD_VH.set(sqe, 0L, fd);
@@ -1224,6 +1337,12 @@ public final class LibUring {
     /** Set SQE buf_index field (for fixed buffers). */
     public static void sqeSetBufIndex(MemorySegment sqe, short bufIndex) {
         SQE_BUF_INDEX_VH.set(sqe, 0L, bufIndex);
+    }
+
+    /** Set SQE buf_group field (for buffer ring selection). */
+    public static void sqeSetBufGroup(MemorySegment sqe, short bufGroup) {
+        // buf_group shares storage with buf_index in the C struct (union).
+        SQE_BUF_INDEX_VH.set(sqe, 0L, bufGroup);
     }
 
     /** Set SQE op_flags field (operation-specific flags like msg_flags). */
@@ -1262,12 +1381,29 @@ public final class LibUring {
      */
     public static void prepSendFixed(
             MemorySegment sqe, int fd, short bufIndex, int len, int flags) {
+        // Legacy helper retained for compatibility with older call sites.
+        // Prefer prepSendFixedBuf(...) which also sets addr.
+        clearSqe(sqe);
         sqeSetOpcode(sqe, IORING_OP_SEND);
         sqeSetFd(sqe, fd);
-        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetAddr(sqe, 0L);
         sqeSetLen(sqe, len);
         sqeSetOpFlags(sqe, flags);
-        sqeSetFlags(sqe, (byte) IOSQE_FIXED_FILE);
+        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetIoprio(sqe, (short) (sqeGetIoprio(sqe) | IORING_RECVSEND_FIXED_BUF));
+    }
+
+    /** Prepare a send operation using a registered buffer (IORING_RECVSEND_FIXED_BUF). */
+    public static void prepSendFixedBuf(
+            MemorySegment sqe, int fd, MemorySegment buf, int len, short bufIndex, int flags) {
+        clearSqe(sqe);
+        sqeSetOpcode(sqe, IORING_OP_SEND);
+        sqeSetFd(sqe, fd);
+        sqeSetAddr(sqe, buf.address());
+        sqeSetLen(sqe, len);
+        sqeSetOpFlags(sqe, flags);
+        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetIoprio(sqe, (short) (sqeGetIoprio(sqe) | IORING_RECVSEND_FIXED_BUF));
     }
 
     /**
@@ -1281,12 +1417,29 @@ public final class LibUring {
      */
     public static void prepRecvFixed(
             MemorySegment sqe, int fd, short bufIndex, int len, int flags) {
+        // Legacy helper retained for compatibility with older call sites.
+        // Prefer prepRecvFixedBuf(...) which also sets addr.
+        clearSqe(sqe);
         sqeSetOpcode(sqe, IORING_OP_RECV);
         sqeSetFd(sqe, fd);
-        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetAddr(sqe, 0L);
         sqeSetLen(sqe, len);
         sqeSetOpFlags(sqe, flags);
-        sqeSetFlags(sqe, (byte) IOSQE_FIXED_FILE);
+        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetIoprio(sqe, (short) (sqeGetIoprio(sqe) | IORING_RECVSEND_FIXED_BUF));
+    }
+
+    /** Prepare a recv operation using a registered buffer (IORING_RECVSEND_FIXED_BUF). */
+    public static void prepRecvFixedBuf(
+            MemorySegment sqe, int fd, MemorySegment buf, int len, short bufIndex, int flags) {
+        clearSqe(sqe);
+        sqeSetOpcode(sqe, IORING_OP_RECV);
+        sqeSetFd(sqe, fd);
+        sqeSetAddr(sqe, buf.address());
+        sqeSetLen(sqe, len);
+        sqeSetOpFlags(sqe, flags);
+        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetIoprio(sqe, (short) (sqeGetIoprio(sqe) | IORING_RECVSEND_FIXED_BUF));
     }
 
     // ========== P1: Zero-Copy Send (SEND_ZC) ==========
@@ -1333,12 +1486,15 @@ public final class LibUring {
      */
     public static void prepSendZcFixed(
             MemorySegment sqe, int fd, short bufIndex, int len, int flags) {
+        // Best-effort legacy helper. Prefer prepSendZc(...) + explicit fixed-buf bits if needed.
+        clearSqe(sqe);
         sqeSetOpcode(sqe, IORING_OP_SEND_ZC);
         sqeSetFd(sqe, fd);
-        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetAddr(sqe, 0L);
         sqeSetLen(sqe, len);
         sqeSetOpFlags(sqe, flags);
-        sqeSetFlags(sqe, (byte) IOSQE_FIXED_FILE);
+        sqeSetBufIndex(sqe, bufIndex);
+        sqeSetIoprio(sqe, (short) (sqeGetIoprio(sqe) | IORING_RECVSEND_FIXED_BUF));
     }
 
     /**
@@ -1383,7 +1539,10 @@ public final class LibUring {
         SQE_FD_VH.set(sqe, 0L, fd);
         SQE_ADDR_VH.set(sqe, 0L, buf.address());
         SQE_LEN_VH.set(sqe, 0L, (int) len);
-        SQE_OP_FLAGS_VH.set(sqe, 0L, flags | IORING_RECV_MULTISHOT);
+        // msg_flags
+        SQE_OP_FLAGS_VH.set(sqe, 0L, flags);
+        // ioprio flags for recv/recvmsg
+        SQE_IOPRIO_VH.set(sqe, 0L, (short) (IORING_RECV_MULTISHOT));
     }
 
     /**
@@ -1560,15 +1719,28 @@ public final class LibUring {
      */
     public static void prepRecvMultishotBufferSelect(
             MemorySegment sqe, int fd, short bgid, int flags) {
+        prepRecvMultishotBufferSelect(sqe, fd, bgid, 0, flags);
+    }
+
+    /**
+     * Prepare a multishot receive with buffer ring selection.
+     *
+     * <p>When using IOSQE_BUFFER_SELECT, the kernel picks the actual buffer from the ring, but
+     * {@code len} still specifies the maximum number of bytes to receive.
+     */
+    public static void prepRecvMultishotBufferSelect(
+            MemorySegment sqe, int fd, short bgid, int len, int flags) {
         clearSqe(sqe);
         SQE_OPCODE_VH.set(sqe, 0L, IORING_OP_RECV);
         SQE_FLAGS_VH.set(sqe, 0L, (byte) IOSQE_BUFFER_SELECT);
         SQE_FD_VH.set(sqe, 0L, fd);
         SQE_ADDR_VH.set(sqe, 0L, 0L);
-        SQE_LEN_VH.set(sqe, 0L, 0);
-        SQE_OP_FLAGS_VH.set(sqe, 0L, flags | IORING_RECV_MULTISHOT);
-        // Note: buf_group at offset 42 is the correct field for buffer ring selection,
-        // but buf_index at offset 40 is used by liburing for backward compatibility
+        SQE_LEN_VH.set(sqe, 0L, len);
+        // msg_flags
+        SQE_OP_FLAGS_VH.set(sqe, 0L, flags);
+        // ioprio flags
+        SQE_IOPRIO_VH.set(sqe, 0L, (short) (IORING_RECV_MULTISHOT));
+        // Buffer group for selection (buf_group shares storage with buf_index)
         SQE_BUF_INDEX_VH.set(sqe, 0L, bgid);
     }
 

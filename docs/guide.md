@@ -1,7 +1,5 @@
 # MyraTransport Usage Guide
 
-This document reflects the current APIs in `myra-transport` as of November 2025. Older snippets (single-argument `TransportFactory.create`, TLS builders, custom batching configs, etc.) no longer match the codebase and have been removed or updated.
-
 ## Quick Start
 
 ### Dependencies

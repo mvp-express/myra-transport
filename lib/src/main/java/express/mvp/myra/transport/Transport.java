@@ -16,7 +16,7 @@ import java.net.SocketAddress;
  * ┌─────────────────────────────────────────────────────────┐
  * │                      Transport                          │
  * ├─────────────────────────────────────────────────────────┤
- * │  • High-level API (connect, send, receive)             │
+ * │  • High-level API (connect, send, receive)              │
  * │  • Buffer pool management                               │
  * │  • Connection lifecycle                                 │
  * │  • Health monitoring                                    │
@@ -26,7 +26,7 @@ import java.net.SocketAddress;
  * ┌─────────────────────────────────────────────────────────┐
  * │                   TransportBackend                      │
  * ├─────────────────────────────────────────────────────────┤
- * │  io_uring (Linux)  │  NIO (fallback)  │  XDP (future)  │
+ * │  io_uring (Linux)  │  NIO (fallback)  │  XDP (future)   │
  * └─────────────────────────────────────────────────────────┘
  * </pre>
  *
