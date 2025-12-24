@@ -1,7 +1,7 @@
 package express.mvp.myra.transport.benchmark;
 
-import express.mvp.roray.utils.functions.DowncallFactory;
-import express.mvp.roray.utils.functions.FunctionDescriptorBuilder;
+import express.mvp.roray.ffm.utils.functions.DowncallFactory;
+import express.mvp.roray.ffm.utils.functions.FunctionDescriptorBuilder;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;

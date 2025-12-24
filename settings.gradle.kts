@@ -6,4 +6,3 @@ rootProject.name = "roray-myra-transport"
 include("lib")
 include("benchmarks")
 include("myra-server")
-includeBuild("../roray-ffm-utils")

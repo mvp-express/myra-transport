@@ -1,12 +1,12 @@
 package express.mvp.myra.transport.iouring;
 
-import static express.mvp.roray.utils.functions.ErrnoCapture.EAGAIN;
-import static express.mvp.roray.utils.functions.ErrnoCapture.EALREADY;
-import static express.mvp.roray.utils.functions.ErrnoCapture.ECONNREFUSED;
-import static express.mvp.roray.utils.functions.ErrnoCapture.ECONNRESET;
-import static express.mvp.roray.utils.functions.ErrnoCapture.EINPROGRESS;
-import static express.mvp.roray.utils.functions.ErrnoCapture.EPIPE;
-import static express.mvp.roray.utils.functions.ErrnoCapture.ETIMEDOUT;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.EAGAIN;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.EALREADY;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.ECONNREFUSED;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.ECONNRESET;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.EINPROGRESS;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.EPIPE;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.ETIMEDOUT;
 
 import express.mvp.myra.transport.TransportException;
 
