@@ -10,9 +10,6 @@ version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs("libs")
-    }
 }
 
 // Spotless configuration for Google Java Format
@@ -72,7 +69,7 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 
 dependencies {
     // roray-ffm-utils for FFM utilities (DowncallFactory, LinuxLayouts, etc.)
-    implementation(files("libs/roray-ffm-utils-0.1.0-SNAPSHOT.jar"))
+    implementation("express.mvp:roray-ffm:0.1.0")
     
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")

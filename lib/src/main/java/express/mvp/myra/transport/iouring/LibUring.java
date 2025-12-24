@@ -1,16 +1,16 @@
 package express.mvp.myra.transport.iouring;
 
-import static express.mvp.roray.utils.functions.ErrnoCapture.EAGAIN;
+import static express.mvp.roray.ffm.utils.functions.ErrnoCapture.EAGAIN;
 import static java.lang.foreign.MemoryLayout.structLayout;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static java.lang.foreign.ValueLayout.JAVA_SHORT;
 
-import express.mvp.roray.utils.functions.DowncallFactory;
-import express.mvp.roray.utils.functions.FunctionDescriptorBuilder;
-import express.mvp.roray.utils.functions.LinuxLayouts;
-import express.mvp.roray.utils.functions.StructAccessor;
+import express.mvp.roray.ffm.utils.functions.DowncallFactory;
+import express.mvp.roray.ffm.utils.functions.FunctionDescriptorBuilder;
+import express.mvp.roray.ffm.utils.functions.LinuxLayouts;
+import express.mvp.roray.ffm.utils.functions.StructAccessor;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;

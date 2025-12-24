@@ -7,7 +7,7 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static java.lang.foreign.ValueLayout.JAVA_SHORT;
 import static java.lang.foreign.MemoryLayout.paddingLayout;
 
-import express.mvp.roray.utils.functions.StructAccessor;
+import express.mvp.roray.ffm.utils.functions.StructAccessor;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;

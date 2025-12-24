@@ -3,7 +3,7 @@ package express.mvp.myra.transport;
 import express.mvp.myra.transport.util.NativeThread;
 import express.mvp.myra.transport.iouring.IoUringBackend;
 import express.mvp.myra.transport.iouring.LibUring;
-import express.mvp.roray.utils.concurrent.MpscRingBuffer;
+import express.mvp.roray.ffm.concurrent.queue.MpscRingBuffer;
 import java.lang.foreign.MemorySegment;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;

@@ -15,6 +15,7 @@ val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 dependencies {
     implementation(project(":lib"))
     implementation(project(":myra-server"))
+    implementation("express.mvp:roray-ffm:0.1.0")
     implementation("org.openjdk.jmh:jmh-core:1.37")
     annotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 
@@ -22,6 +23,7 @@ dependencies {
     jmh(project(":myra-server"))
     jmh("org.openjdk.jmh:jmh-core:1.37")
     jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+    jmh("express.mvp:roray-ffm:0.1.0")
     
     // Netty for comparison benchmarks
     jmh("io.netty:netty-all:4.1.115.Final")
