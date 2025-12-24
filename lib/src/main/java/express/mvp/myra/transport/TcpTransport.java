@@ -707,6 +707,30 @@ public final class TcpTransport implements Transport {
 
     @Override
     public void close() {
-        commandQueue.offer(CLOSE_COMMAND);
+        if (closed) {
+            return;
+        }
+
+        // If called from within the poller thread, close directly to avoid self-join deadlock.
+        if (Thread.currentThread() == pollerThread) {
+            doClose();
+            return;
+        }
+
+        // Ensure the close command is delivered even under backpressure.
+        // If the queue is temporarily full, spin until the poller drains it.
+        while (!commandQueue.offer(CLOSE_COMMAND)) {
+            Thread.onSpinWait();
+            if (closed) {
+                break;
+            }
+        }
+
+        // Wait for the poller thread to observe the close and exit.
+        try {
+            pollerThread.join(5_000);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
