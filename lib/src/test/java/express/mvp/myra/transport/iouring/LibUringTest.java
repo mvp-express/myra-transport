@@ -66,7 +66,7 @@ class LibUringTest {
             assertEquals(16, LibUring.IORING_OP_CONNECT);
             assertEquals(26, LibUring.IORING_OP_SEND);
             assertEquals(27, LibUring.IORING_OP_RECV);
-            assertEquals(46, LibUring.IORING_OP_SEND_ZC);
+            assertEquals(47, LibUring.IORING_OP_SEND_ZC);
         }
 
         @Test

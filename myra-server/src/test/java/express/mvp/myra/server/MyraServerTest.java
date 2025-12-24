@@ -68,7 +68,12 @@ class MyraServerTest {
 
         TcpTransport client =
                 new TcpTransport(
-                        clientBackend, clientPool, new InetSocketAddress("127.0.0.1", 9999), -1);
+                clientBackend,
+                clientPool,
+                new InetSocketAddress("127.0.0.1", 9999),
+                clientConfig.cpuAffinity(),
+                clientConfig.bufferMode(),
+                clientConfig.zeroCopySendMinBytes());
         client.start(
                 new TransportHandlerAdapter() {
                     @Override
