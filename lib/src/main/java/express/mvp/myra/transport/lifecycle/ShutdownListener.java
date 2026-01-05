@@ -34,8 +34,8 @@ package express.mvp.myra.transport.lifecycle;
  *
  * <h2>Thread Safety</h2>
  *
- * <p>Listener callbacks may be invoked from different threads (e.g., the coordinator's timer
- * thread or I/O threads). Implementations must be thread-safe.
+ * <p>Listener callbacks may be invoked from different threads (e.g., the coordinator's timer thread
+ * or I/O threads). Implementations must be thread-safe.
  *
  * @see ShutdownCoordinator
  * @see ShutdownPhase
@@ -69,8 +69,8 @@ public interface ShutdownListener {
      *
      * <p>This is the final callback, indicating the transport is now in TERMINATED state.
      *
-     * @param graceful true if shutdown completed gracefully (all operations drained),
-     *                 false if forced due to timeout
+     * @param graceful true if shutdown completed gracefully (all operations drained), false if
+     *     forced due to timeout
      * @param durationMs total shutdown duration in milliseconds
      */
     void onShutdownComplete(boolean graceful, long durationMs);

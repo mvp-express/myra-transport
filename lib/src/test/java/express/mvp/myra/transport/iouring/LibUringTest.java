@@ -3,6 +3,7 @@ package express.mvp.myra.transport.iouring;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.condition.OS;
  * SQE/CQE operations - Zero-copy and multishot flags
  */
 @EnabledOnOs(OS.LINUX)
+@SuppressFBWarnings(
+        value = {"RpC_REPEATED_CONDITIONAL_TEST"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class LibUringTest {
 
     @Nested
@@ -266,7 +270,7 @@ class LibUringTest {
                 // Check multishot flag in ioprio
                 short ioprio = sqe.get(ValueLayout.JAVA_SHORT, 2);
                 assertTrue(
-                    (ioprio & LibUring.IORING_RECV_MULTISHOT) != 0,
+                        (ioprio & LibUring.IORING_RECV_MULTISHOT) != 0,
                         "Should have multishot flag set");
             }
         }

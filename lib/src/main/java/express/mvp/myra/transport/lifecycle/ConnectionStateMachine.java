@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Thread-safe state machine for managing connection lifecycle.
  *
- * <p>This class enforces valid state transitions and notifies listeners of state changes.
- * It provides a robust foundation for connection management with proper state validation.
+ * <p>This class enforces valid state transitions and notifies listeners of state changes. It
+ * provides a robust foundation for connection management with proper state validation.
  *
  * <h2>Valid Transitions</h2>
  *
@@ -44,34 +46,30 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <h2>Thread Safety</h2>
  *
- * <p>All methods are thread-safe. State transitions use atomic operations to ensure
- * consistency even with concurrent access.
+ * <p>All methods are thread-safe. State transitions use atomic operations to ensure consistency
+ * even with concurrent access.
  *
  * @see ConnectionState
  * @see ConnectionStateListener
  */
 public final class ConnectionStateMachine {
 
+    private static final Logger LOGGER = Logger.getLogger(ConnectionStateMachine.class.getName());
+
     // Valid transitions from each state
-    private static final Set<ConnectionState> FROM_NEW = EnumSet.of(
-            ConnectionState.CONNECTING,
-            ConnectionState.CLOSED);
+    private static final Set<ConnectionState> FROM_NEW =
+            EnumSet.of(ConnectionState.CONNECTING, ConnectionState.CLOSED);
 
-    private static final Set<ConnectionState> FROM_CONNECTING = EnumSet.of(
-            ConnectionState.CONNECTED,
-            ConnectionState.FAILED,
-            ConnectionState.CLOSING);
+    private static final Set<ConnectionState> FROM_CONNECTING =
+            EnumSet.of(ConnectionState.CONNECTED, ConnectionState.FAILED, ConnectionState.CLOSING);
 
-    private static final Set<ConnectionState> FROM_CONNECTED = EnumSet.of(
-            ConnectionState.CLOSING,
-            ConnectionState.FAILED);
+    private static final Set<ConnectionState> FROM_CONNECTED =
+            EnumSet.of(ConnectionState.CLOSING, ConnectionState.FAILED);
 
-    private static final Set<ConnectionState> FROM_FAILED = EnumSet.of(
-            ConnectionState.CONNECTING,
-            ConnectionState.CLOSED);
+    private static final Set<ConnectionState> FROM_FAILED =
+            EnumSet.of(ConnectionState.CONNECTING, ConnectionState.CLOSED);
 
-    private static final Set<ConnectionState> FROM_CLOSING = EnumSet.of(
-            ConnectionState.CLOSED);
+    private static final Set<ConnectionState> FROM_CLOSING = EnumSet.of(ConnectionState.CLOSED);
 
     private static final Set<ConnectionState> FROM_CLOSED = EnumSet.noneOf(ConnectionState.class);
 
@@ -85,9 +83,7 @@ public final class ConnectionStateMachine {
     /** Optional identifier for this connection (for logging/debugging). */
     private volatile String connectionId;
 
-    /**
-     * Creates a new state machine in {@link ConnectionState#NEW} state.
-     */
+    /** Creates a new state machine in {@link ConnectionState#NEW} state. */
     public ConnectionStateMachine() {
         // Default state is NEW
     }
@@ -177,8 +173,8 @@ public final class ConnectionStateMachine {
     /**
      * Attempts to transition to a new state.
      *
-     * <p>The transition succeeds only if it's a valid transition from the current state.
-     * Listeners are notified on successful transition.
+     * <p>The transition succeeds only if it's a valid transition from the current state. Listeners
+     * are notified on successful transition.
      *
      * @param newState the desired new state
      * @return true if the transition was successful
@@ -218,8 +214,8 @@ public final class ConnectionStateMachine {
     /**
      * Attempts to transition from a specific expected state.
      *
-     * <p>This is useful for conditional transitions where you want to ensure
-     * the current state hasn't changed since you checked it.
+     * <p>This is useful for conditional transitions where you want to ensure the current state
+     * hasn't changed since you checked it.
      *
      * @param expectedState the expected current state
      * @param newState the desired new state
@@ -238,9 +234,7 @@ public final class ConnectionStateMachine {
      * @return true if transition successful
      */
     public boolean transitionFrom(
-            ConnectionState expectedState,
-            ConnectionState newState,
-            Throwable cause) {
+            ConnectionState expectedState, ConnectionState newState, Throwable cause) {
 
         // Check if transition is valid
         if (!isValidTransition(expectedState, newState)) {
@@ -259,8 +253,8 @@ public final class ConnectionStateMachine {
     /**
      * Forces a transition to a state, bypassing validation.
      *
-     * <p><b>Warning:</b> This should only be used in exceptional circumstances,
-     * such as error recovery. Normal code should use {@link #transitionTo(ConnectionState)}.
+     * <p><b>Warning:</b> This should only be used in exceptional circumstances, such as error
+     * recovery. Normal code should use {@link #transitionTo(ConnectionState)}.
      *
      * @param newState the state to force
      * @param cause the reason for forced transition
@@ -311,19 +305,15 @@ public final class ConnectionStateMachine {
         };
     }
 
-    /**
-     * Notifies all listeners of a state change.
-     */
+    /** Notifies all listeners of a state change. */
     private void notifyListeners(
-            ConnectionState previous,
-            ConnectionState current,
-            Throwable cause) {
+            ConnectionState previous, ConnectionState current, Throwable cause) {
 
         for (ConnectionStateListener listener : listeners) {
             try {
                 listener.onStateChanged(previous, current, cause);
             } catch (Exception e) {
-                // Don't let listener errors break state machine
+                LOGGER.log(Level.WARNING, "Connection state listener failed", e);
             }
         }
     }

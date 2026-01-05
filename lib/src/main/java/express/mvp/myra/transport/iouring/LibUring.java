@@ -92,7 +92,7 @@ import java.lang.invoke.MethodHandle;
  * <ul>
  *   <li>Linux kernel 5.1+ (5.6+ recommended for full features, 6.0+ for zero-copy send)
  *   <li>liburing shared library installed (liburing.so, typically from liburing-dev package)
- *   <li>Java 21+ with FFM enabled (--enable-native-access=ALL-UNNAMED)
+ *   <li>Java 25+ with FFM enabled (--enable-native-access=ALL-UNNAMED)
  * </ul>
  *
  * <h2>Performance Characteristics</h2>
@@ -138,11 +138,11 @@ public final class LibUring {
      *  24: len (4)
      *  28: op_flags (4)
      *  32: user_data (8)
-         *  40: buf_index / buf_group (2)
-         *  42: personality (2)
-         *  44: splice_fd_in / file_index / addr_len (4)
-         *  48: addr3 (8)
-         *  56: __pad2 (8)
+     *  40: buf_index / buf_group (2)
+     *  42: personality (2)
+     *  44: splice_fd_in / file_index / addr_len (4)
+     *  48: addr3 (8)
+     *  56: __pad2 (8)
      * </pre>
      */
     public static final StructLayout IO_URING_SQE_LAYOUT =
@@ -156,13 +156,13 @@ public final class LibUring {
                             JAVA_INT.withName("len"),
                             JAVA_INT.withName("op_flags"),
                             JAVA_LONG.withName("user_data"),
-                    // Note: buf_index and buf_group are a 2-byte union at the same offset.
-                    // We model the union as a single 16-bit field and write either meaning.
-                    JAVA_SHORT.withName("buf_index"),
-                    JAVA_SHORT.withName("personality"),
-                    JAVA_INT.withName("splice_fd_in"),
-                    JAVA_LONG.withName("addr3"),
-                    JAVA_LONG.withName("__pad2"))
+                            // Note: buf_index and buf_group are a 2-byte union at the same offset.
+                            // We model the union as a single 16-bit field and write either meaning.
+                            JAVA_SHORT.withName("buf_index"),
+                            JAVA_SHORT.withName("personality"),
+                            JAVA_INT.withName("splice_fd_in"),
+                            JAVA_LONG.withName("addr3"),
+                            JAVA_LONG.withName("__pad2"))
                     .withName("io_uring_sqe");
 
     /**
@@ -608,7 +608,7 @@ public final class LibUring {
                             "htons",
                             FunctionDescriptor.of(ValueLayout.JAVA_SHORT, ValueLayout.JAVA_SHORT));
 
-        } catch (Exception e) {
+        } catch (RuntimeException | LinkageError e) {
             // liburing or libc functions not available
         }
         io_uring_queue_init = tempInit;
@@ -722,7 +722,7 @@ public final class LibUring {
         try {
             return (int) io_uring_queue_init.invokeExact(entries, ring, flags);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_queue_init failed", e);
+            throw new IllegalStateException("io_uring_queue_init failed", e);
         }
     }
 
@@ -738,7 +738,7 @@ public final class LibUring {
         try {
             return (int) io_uring_queue_init_params.invokeExact(entries, ring, params);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_queue_init_params failed", e);
+            throw new IllegalStateException("io_uring_queue_init_params failed", e);
         }
     }
 
@@ -747,7 +747,7 @@ public final class LibUring {
         try {
             io_uring_queue_exit.invokeExact(ring);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_queue_exit failed", e);
+            throw new IllegalStateException("io_uring_queue_exit failed", e);
         }
     }
 
@@ -763,7 +763,7 @@ public final class LibUring {
         try {
             return (int) io_uring_register_buffers.invokeExact(ring, iovecs, nrIovecs);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_register_buffers failed", e);
+            throw new IllegalStateException("io_uring_register_buffers failed", e);
         }
     }
 
@@ -772,7 +772,7 @@ public final class LibUring {
         try {
             return (int) io_uring_unregister_buffers.invokeExact(ring);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_unregister_buffers failed", e);
+            throw new IllegalStateException("io_uring_unregister_buffers failed", e);
         }
     }
 
@@ -785,7 +785,7 @@ public final class LibUring {
         try {
             return (int) io_uring_register_files.invokeExact(ring, files, nr_files);
         } catch (Throwable t) {
-            throw new RuntimeException(t);
+            throw new IllegalStateException("io_uring_register_files failed", t);
         }
     }
 
@@ -793,7 +793,7 @@ public final class LibUring {
         try {
             return (int) io_uring_unregister_files.invokeExact(ring);
         } catch (Throwable t) {
-            throw new RuntimeException(t);
+            throw new IllegalStateException("io_uring_unregister_files failed", t);
         }
     }
 
@@ -802,7 +802,7 @@ public final class LibUring {
         try {
             return (int) io_uring_register_files_update.invokeExact(ring, off, files, nr_files);
         } catch (Throwable t) {
-            throw new RuntimeException(t);
+            throw new IllegalStateException("io_uring_register_files_update failed", t);
         }
     }
 
@@ -814,7 +814,7 @@ public final class LibUring {
             }
             return sqe.reinterpret(IO_URING_SQE_LAYOUT.byteSize());
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_get_sqe failed", e);
+            throw new IllegalStateException("io_uring_get_sqe failed", e);
         }
     }
 
@@ -827,7 +827,7 @@ public final class LibUring {
         try {
             return (int) io_uring_submit.invokeExact(ring);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_submit failed", e);
+            throw new IllegalStateException("io_uring_submit failed", e);
         }
     }
 
@@ -843,7 +843,7 @@ public final class LibUring {
             // Use wait_cqe_timeout with NULL timeout
             return (int) io_uring_wait_cqe_timeout.invokeExact(ring, cqePtr, MemorySegment.NULL);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_wait_cqe failed", e);
+            throw new IllegalStateException("io_uring_wait_cqe failed", e);
         }
     }
 
@@ -863,7 +863,7 @@ public final class LibUring {
         try {
             return (int) io_uring_wait_cqe_timeout.invokeExact(ring, cqePtr, ts);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_wait_cqe_timeout failed", e);
+            throw new IllegalStateException("io_uring_wait_cqe_timeout failed", e);
         }
     }
 
@@ -912,7 +912,7 @@ public final class LibUring {
             cqePtr.set(ValueLayout.ADDRESS, 0, cqe);
 
             return 0;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
             return -1;
         }
@@ -928,7 +928,7 @@ public final class LibUring {
 
             int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
             kheadPtr.set(ValueLayout.JAVA_INT, 0, head + 1);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
@@ -952,11 +952,11 @@ public final class LibUring {
         private final long cqeSize;
 
         private static final long CQE_USER_DATA_OFFSET =
-            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("user_data"));
+                IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("user_data"));
         private static final long CQE_RES_OFFSET =
-            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("res"));
+                IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("res"));
         private static final long CQE_FLAGS_OFFSET =
-            IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("flags"));
+                IO_URING_CQE_LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("flags"));
 
         private CqFastPath(MemorySegment ring) {
             MemorySegment cq = ring.asSlice(CQ_OFFSET, IO_URING_CQ_LAYOUT.byteSize());
@@ -974,7 +974,9 @@ public final class LibUring {
             this.cqesArray = cqes.reinterpret((long) (mask + 1) * cqeSize);
         }
 
-        /** @return CQ head if CQE available, -1 if none */
+        /**
+         * @return CQ head if CQE available, -1 if none
+         */
         public int peekHead() {
             int head = kheadPtr.get(ValueLayout.JAVA_INT, 0);
             int tail = ktailPtr.get(ValueLayout.JAVA_INT, 0);
@@ -999,7 +1001,9 @@ public final class LibUring {
             return cqesArray.get(ValueLayout.JAVA_INT, base + CQE_FLAGS_OFFSET);
         }
 
-        /** @return 0 if CQE available, -EAGAIN if not */
+        /**
+         * @return 0 if CQE available, -EAGAIN if not
+         */
         public int peekCqe(MemorySegment cqePtr) {
             int head = peekHead();
             if (head < 0) {
@@ -1116,7 +1120,8 @@ public final class LibUring {
     public static final byte IORING_OP_SEND_ZC = 47;
     // P1: Multishot receive operation (Linux 5.16+)
     // In io_uring uapi this is a bit in sqe->ioprio for recv/recvmsg.
-    public static final byte IORING_OP_RECV_MULTISHOT = 27; // Same opcode as RECV, but with ioprio flag
+    public static final byte IORING_OP_RECV_MULTISHOT =
+            27; // Same opcode as RECV, but with ioprio flag
     public static final int IORING_RECV_MULTISHOT = 1 << 1;
 
     // Registered (fixed) buffers for send/recv via sqe->ioprio.
@@ -1610,7 +1615,7 @@ public final class LibUring {
                 return (int) io_uring_register_buf_ring.invokeExact(ring, reg, 0);
             }
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_register_buf_ring failed", e);
+            throw new IllegalStateException("io_uring_register_buf_ring failed", e);
         }
     }
 
@@ -1628,7 +1633,7 @@ public final class LibUring {
         try {
             return (int) io_uring_unregister_buf_ring.invokeExact(ring, bgid);
         } catch (Throwable e) {
-            throw new RuntimeException("io_uring_unregister_buf_ring failed", e);
+            throw new IllegalStateException("io_uring_unregister_buf_ring failed", e);
         }
     }
 

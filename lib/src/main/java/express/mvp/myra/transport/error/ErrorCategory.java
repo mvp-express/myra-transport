@@ -39,6 +39,7 @@ public enum ErrorCategory {
      * Transient errors that may succeed on immediate or short-delay retry.
      *
      * <p>Examples:
+     *
      * <ul>
      *   <li>Timeout waiting for response
      *   <li>Server busy/overloaded
@@ -54,6 +55,7 @@ public enum ErrorCategory {
      * Network connectivity errors requiring reconnection.
      *
      * <p>Examples:
+     *
      * <ul>
      *   <li>Connection reset by peer
      *   <li>Connection refused
@@ -70,6 +72,7 @@ public enum ErrorCategory {
      * Protocol-level errors indicating invalid communication.
      *
      * <p>Examples:
+     *
      * <ul>
      *   <li>Invalid message framing
      *   <li>Unexpected response type
@@ -77,8 +80,8 @@ public enum ErrorCategory {
      *   <li>Malformed data
      * </ul>
      *
-     * <p>Recommended action: Log details, may need session reset. Not typically retryable
-     * without fixing the protocol issue.
+     * <p>Recommended action: Log details, may need session reset. Not typically retryable without
+     * fixing the protocol issue.
      */
     PROTOCOL(false, "Protocol error - invalid communication"),
 
@@ -86,6 +89,7 @@ public enum ErrorCategory {
      * Resource exhaustion errors.
      *
      * <p>Examples:
+     *
      * <ul>
      *   <li>Out of memory
      *   <li>Buffer pool exhausted
@@ -101,6 +105,7 @@ public enum ErrorCategory {
      * Fatal errors requiring immediate shutdown.
      *
      * <p>Examples:
+     *
      * <ul>
      *   <li>JVM error (OutOfMemoryError, StackOverflowError)
      *   <li>Security violation
@@ -115,8 +120,8 @@ public enum ErrorCategory {
     /**
      * Unknown or unclassified errors.
      *
-     * <p>Used when the error type cannot be determined. Conservative handling
-     * treats these as potentially transient.
+     * <p>Used when the error type cannot be determined. Conservative handling treats these as
+     * potentially transient.
      *
      * <p>Recommended action: Log details, limited retry with backoff.
      */
@@ -133,8 +138,8 @@ public enum ErrorCategory {
     /**
      * Checks if errors in this category are generally retryable.
      *
-     * <p>Note: Even if a category is retryable, specific policies may limit retries
-     * based on attempt count, duration, or other factors.
+     * <p>Note: Even if a category is retryable, specific policies may limit retries based on
+     * attempt count, duration, or other factors.
      *
      * @return true if retry is generally appropriate
      */

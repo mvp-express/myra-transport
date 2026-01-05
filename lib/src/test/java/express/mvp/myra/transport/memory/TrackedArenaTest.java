@@ -6,16 +6,13 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link TrackedArena}.
- */
+/** Unit tests for {@link TrackedArena}. */
 @DisplayName("TrackedArena")
 class TrackedArenaTest {
 
@@ -231,15 +228,19 @@ class TrackedArenaTest {
             try (TrackedArena arena = TrackedArena.ofShared("shared")) {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Thread t1 = new Thread(() -> {
-                    arena.allocate(100);
-                    latch.countDown();
-                });
+                Thread t1 =
+                        new Thread(
+                                () -> {
+                                    arena.allocate(100);
+                                    latch.countDown();
+                                });
 
-                Thread t2 = new Thread(() -> {
-                    arena.allocate(200);
-                    latch.countDown();
-                });
+                Thread t2 =
+                        new Thread(
+                                () -> {
+                                    arena.allocate(200);
+                                    latch.countDown();
+                                });
 
                 t1.start();
                 t2.start();

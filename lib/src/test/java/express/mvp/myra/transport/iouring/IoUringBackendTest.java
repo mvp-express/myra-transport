@@ -3,6 +3,7 @@ package express.mvp.myra.transport.iouring;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -28,6 +29,15 @@ import org.junit.jupiter.api.condition.OS;
  */
 @EnabledOnOs(OS.LINUX)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SuppressFBWarnings(
+        value = {
+            "DE_MIGHT_IGNORE",
+            "REC_CATCH_EXCEPTION",
+            "RpC_REPEATED_CONDITIONAL_TEST",
+            "SIC_INNER_SHOULD_BE_STATIC_ANON",
+            "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"
+        },
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class IoUringBackendTest {
 
     private IoUringBackend backend;
@@ -83,7 +93,7 @@ class IoUringBackendTest {
                 TransportConfig.builder()
                         .backendType(TransportConfig.BackendType.IO_URING)
                         .sqPollEnabled(true)
-                        .sqPollIdleTimeout(1000) // 1ms
+                        .sqPollIdleTimeout(1000) // 1000μs (1ms)
                         .build();
 
         // SQPOLL may fail on some systems (needs CAP_SYS_ADMIN or io_uring_setup_sqpoll permission)

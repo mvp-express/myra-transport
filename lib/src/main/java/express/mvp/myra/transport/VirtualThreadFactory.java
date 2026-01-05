@@ -6,9 +6,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Thread factory that creates virtual threads with configurable naming and properties.
  *
- * <p>This factory creates lightweight virtual threads (Project Loom) that are ideal for
- * I/O-bound operations where blocking is acceptable and millions of concurrent tasks
- * need to be handled efficiently.
+ * <p>This factory creates lightweight virtual threads (Project Loom) that are ideal for I/O-bound
+ * operations where blocking is acceptable and millions of concurrent tasks need to be handled
+ * efficiently.
  *
  * <h2>Virtual Threads vs Platform Threads</h2>
  *
@@ -25,10 +25,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h2>Use Cases</h2>
  *
  * <ul>
- *   <li><b>Callback processing:</b> Handle completion callbacks without blocking I/O thread</li>
- *   <li><b>Request handling:</b> One virtual thread per incoming request</li>
- *   <li><b>Fan-out operations:</b> Concurrent calls to multiple services</li>
- *   <li><b>I/O multiplexing:</b> Wait on multiple channels without selector complexity</li>
+ *   <li><b>Callback processing:</b> Handle completion callbacks without blocking I/O thread
+ *   <li><b>Request handling:</b> One virtual thread per incoming request
+ *   <li><b>Fan-out operations:</b> Concurrent calls to multiple services
+ *   <li><b>I/O multiplexing:</b> Wait on multiple channels without selector complexity
  * </ul>
  *
  * <h2>Usage Example</h2>
@@ -103,9 +103,7 @@ public final class VirtualThreadFactory implements ThreadFactory {
         long count = threadCount.incrementAndGet();
         String threadName = namePrefix + "-" + count;
 
-        Thread thread = virtualBuilder
-                .name(threadName)
-                .unstarted(runnable);
+        Thread thread = virtualBuilder.name(threadName).unstarted(runnable);
 
         // Note: Virtual threads don't truly support daemon flag, but we set for consistency
         // Virtual threads don't prevent JVM shutdown regardless of daemon status
@@ -143,8 +141,10 @@ public final class VirtualThreadFactory implements ThreadFactory {
     @Override
     public String toString() {
         return "VirtualThreadFactory["
-                + "prefix=" + namePrefix
-                + ", created=" + threadCount.get()
+                + "prefix="
+                + namePrefix
+                + ", created="
+                + threadCount.get()
                 + "]";
     }
 }

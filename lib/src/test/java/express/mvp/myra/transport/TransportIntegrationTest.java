@@ -2,6 +2,7 @@ package express.mvp.myra.transport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.net.InetSocketAddress;
@@ -10,6 +11,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for complete transport stack. */
+@SuppressFBWarnings(
+        value = {"UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class TransportIntegrationTest {
 
     private Transport transport;

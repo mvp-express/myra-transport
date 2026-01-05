@@ -1,8 +1,9 @@
 package express.mvp.myra.transport;
 
-import express.mvp.myra.transport.util.NativeThread;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.iouring.IoUringBackend;
 import express.mvp.myra.transport.iouring.LibUring;
+import express.mvp.myra.transport.util.NativeThread;
 import express.mvp.roray.ffm.concurrent.queue.MpscRingBuffer;
 import java.lang.foreign.MemorySegment;
 import java.net.SocketAddress;
@@ -60,6 +61,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * @see TransportBackend
  * @see TransportHandler
  */
+@SuppressFBWarnings(
+        value = "UUF_UNUSED_FIELD",
+        justification = "Padding fields isolate hot variables to avoid false sharing.")
 public final class TcpTransport implements Transport {
 
     /** The I/O backend (io_uring or NIO). */
@@ -161,7 +165,9 @@ public final class TcpTransport implements Transport {
     /** One-time log guard for BUFFER_RING receive failures. */
     private boolean bufferRingReceiveFailureLogged;
 
-    /** If true, BUFFER_RING is disabled for this transport instance and we fall back to STANDARD. */
+    /**
+     * If true, BUFFER_RING is disabled for this transport instance and we fall back to STANDARD.
+     */
     private boolean bufferRingReceiveDisabled;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -188,7 +194,6 @@ public final class TcpTransport implements Transport {
 
     /** Tracks whether a send has been retried on the standard path. */
     private final boolean[] pendingSendsRetried = new boolean[PENDING_SENDS_SIZE];
-
 
     /**
      * Creates a new TCP transport with the specified backend and configuration.
@@ -293,7 +298,7 @@ public final class TcpTransport implements Transport {
 
         // Completion handler for all I/O operations
         IoUringBackend.ExtendedCompletionHandler completionHandler =
-            (token, result, flags) -> {
+                (token, result, flags) -> {
                     if (handler == null) return;
 
                     // Decode operation type from token flags
@@ -308,10 +313,12 @@ public final class TcpTransport implements Transport {
                                     && ioUringBackend != null) {
                                 // Buffer ring multishot receive: bufferId is encoded in CQE flags.
                                 if (result >= 0) {
-                                    int bufferId = ((flags & LibUring.IORING_CQE_F_BUFFER) != 0)
-                                            ? ((flags >> 16) & 0xFFFF)
-                                            : -1;
-                                    MemorySegment buf = ioUringBackend.getBufferRingBuffer(bufferId);
+                                    int bufferId =
+                                            ((flags & LibUring.IORING_CQE_F_BUFFER) != 0)
+                                                    ? ((flags >> 16) & 0xFFFF)
+                                                    : -1;
+                                    MemorySegment buf =
+                                            ioUringBackend.getBufferRingBuffer(bufferId);
                                     if (buf != null) {
                                         handler.onDataReceived(buf.asSlice(0, result));
                                         ioUringBackend.recycleBufferRingBuffer(bufferId);
@@ -319,7 +326,8 @@ public final class TcpTransport implements Transport {
                                         if (!bufferRingReceiveFailureLogged) {
                                             bufferRingReceiveFailureLogged = true;
                                             System.err.println(
-                                                    "Warning: BUFFER_RING recv without buffer id (res="
+                                                    "Warning: BUFFER_RING recv without buffer id"
+                                                            + " (res="
                                                             + result
                                                             + ", flags=0x"
                                                             + Integer.toHexString(flags)
@@ -445,7 +453,8 @@ public final class TcpTransport implements Transport {
                                 if (result < 0
                                         && !pendingSendsRetried[index]
                                         && (result == -22 || result == -95)) {
-                                    // Zero-copy not supported / invalid for this socket. Retry as standard.
+                                    // Zero-copy not supported / invalid for this socket. Retry as
+                                    // standard.
                                     pendingSendsRetried[index] = true;
                                     pendingSendsZeroCopy[index] = false;
                                     pendingSendsAwaitingNotif[index] = false;
@@ -585,13 +594,13 @@ public final class TcpTransport implements Transport {
         try {
             backend.close();
         } catch (Exception e) {
-            // Log but don't throw during cleanup
+            System.err.println("TcpTransport: backend close failed: " + e.getMessage());
         }
 
         try {
             bufferPool.close();
         } catch (Exception e) {
-            // Log but don't throw during cleanup
+            System.err.println("TcpTransport: buffer pool close failed: " + e.getMessage());
         }
     }
 
@@ -624,9 +633,14 @@ public final class TcpTransport implements Transport {
             // Slot collision - too many pending sends (>4096 in flight)
             // This indicates backpressure - caller should slow down
             throw new TransportException(
-                    "Too many pending sends: slot " + index + " still occupied by token "
-                            + existing.getToken() + ". Current token: " + token
-                            + ". Consider implementing backpressure or increasing PENDING_SENDS_SIZE.");
+                    "Too many pending sends: slot "
+                            + index
+                            + " still occupied by token "
+                            + existing.getToken()
+                            + ". Current token: "
+                            + token
+                            + ". Consider implementing backpressure or increasing"
+                            + " PENDING_SENDS_SIZE.");
         }
 
         RegisteredBuffer buffer = bufferPool.acquire();
@@ -647,11 +661,11 @@ public final class TcpTransport implements Transport {
         pendingSendsAwaitingNotif[index] = false;
         pendingSendsRetried[index] = false;
         pendingSendsZeroCopy[index] =
-            bufferMode == TransportConfig.BufferMode.ZERO_COPY
-                && ioUringBackend != null
-                && data.byteSize() >= zeroCopySendMinBytes;
+                bufferMode == TransportConfig.BufferMode.ZERO_COPY
+                        && ioUringBackend != null
+                        && data.byteSize() >= zeroCopySendMinBytes;
         pendingSendsFixed[index] =
-            bufferMode == TransportConfig.BufferMode.FIXED && ioUringBackend != null;
+                bufferMode == TransportConfig.BufferMode.FIXED && ioUringBackend != null;
 
         // Submit to poller thread
         if (!commandQueue.offer(buffer)) {

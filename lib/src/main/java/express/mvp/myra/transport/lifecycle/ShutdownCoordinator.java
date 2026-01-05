@@ -7,6 +7,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Coordinates graceful shutdown of transport resources.
@@ -58,13 +60,15 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <h2>Thread Safety</h2>
  *
- * <p>All methods are thread-safe. Phase transitions use atomic operations to ensure
- * correct ordering even with concurrent shutdown requests.
+ * <p>All methods are thread-safe. Phase transitions use atomic operations to ensure correct
+ * ordering even with concurrent shutdown requests.
  *
  * @see ShutdownPhase
  * @see ShutdownListener
  */
 public final class ShutdownCoordinator {
+
+    private static final Logger LOGGER = Logger.getLogger(ShutdownCoordinator.class.getName());
 
     /** Current shutdown phase. */
     private final AtomicReference<ShutdownPhase> phase =
@@ -88,9 +92,7 @@ public final class ShutdownCoordinator {
     /** Whether shutdown was graceful (all ops completed) or forced (timeout). */
     private volatile boolean gracefulShutdown = true;
 
-    /**
-     * Creates a new shutdown coordinator in RUNNING state.
-     */
+    /** Creates a new shutdown coordinator in RUNNING state. */
     public ShutdownCoordinator() {
         // Default state is RUNNING
     }
@@ -134,8 +136,8 @@ public final class ShutdownCoordinator {
     /**
      * Registers a listener for shutdown events.
      *
-     * <p>Listeners can be added at any time. If shutdown has already started, the listener
-     * will receive subsequent phase changes but not previous ones.
+     * <p>Listeners can be added at any time. If shutdown has already started, the listener will
+     * receive subsequent phase changes but not previous ones.
      *
      * @param listener the listener to register
      */
@@ -156,8 +158,8 @@ public final class ShutdownCoordinator {
     /**
      * Records that an operation has started.
      *
-     * <p>Call this before starting any tracked operation (send, receive, etc.).
-     * Must be paired with {@link #operationCompleted()}.
+     * <p>Call this before starting any tracked operation (send, receive, etc.). Must be paired with
+     * {@link #operationCompleted()}.
      *
      * @return true if the operation was accepted, false if shutdown is in progress
      */
@@ -207,7 +209,7 @@ public final class ShutdownCoordinator {
                 try {
                     listener.onDrainProgress(Math.max(0, remaining), drainStartCount);
                 } catch (Exception e) {
-                    // Don't let listener errors break shutdown
+                    LOGGER.log(Level.WARNING, "Shutdown listener failed during drain progress", e);
                 }
             }
         }
@@ -226,9 +228,8 @@ public final class ShutdownCoordinator {
      * @throws InterruptedException if the calling thread is interrupted
      */
     public boolean shutdown(
-            Duration drainTimeout,
-            Runnable connectionCloser,
-            Runnable resourceReleaser) throws InterruptedException {
+            Duration drainTimeout, Runnable connectionCloser, Runnable resourceReleaser)
+            throws InterruptedException {
 
         // Transition RUNNING → DRAINING (only first caller wins)
         if (!phase.compareAndSet(ShutdownPhase.RUNNING, ShutdownPhase.DRAINING)) {
@@ -249,8 +250,7 @@ public final class ShutdownCoordinator {
         }
 
         // Wait for drain to complete or timeout
-        boolean drained = drainCompleteLatch.await(
-                drainTimeout.toMillis(), TimeUnit.MILLISECONDS);
+        boolean drained = drainCompleteLatch.await(drainTimeout.toMillis(), TimeUnit.MILLISECONDS);
 
         gracefulShutdown = drained;
 
@@ -279,13 +279,12 @@ public final class ShutdownCoordinator {
         transitionToPhase(ShutdownPhase.TERMINATED);
 
         // Notify completion
-        long durationMs = TimeUnit.NANOSECONDS.toMillis(
-                System.nanoTime() - shutdownStartTimeNanos);
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - shutdownStartTimeNanos);
         for (ShutdownListener listener : listeners) {
             try {
                 listener.onShutdownComplete(gracefulShutdown, durationMs);
             } catch (Exception e) {
-                // Don't let listener errors break shutdown
+                LOGGER.log(Level.WARNING, "Shutdown listener failed on completion", e);
             }
         }
 
@@ -339,13 +338,12 @@ public final class ShutdownCoordinator {
         transitionToPhase(ShutdownPhase.TERMINATED);
 
         // Notify completion
-        long durationMs = TimeUnit.NANOSECONDS.toMillis(
-                System.nanoTime() - shutdownStartTimeNanos);
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - shutdownStartTimeNanos);
         for (ShutdownListener listener : listeners) {
             try {
                 listener.onShutdownComplete(false, durationMs);
             } catch (Exception e) {
-                // Don't let listener errors break shutdown
+                LOGGER.log(Level.WARNING, "Shutdown listener failed on forced completion", e);
             }
         }
     }
@@ -381,28 +379,24 @@ public final class ShutdownCoordinator {
         }
     }
 
-    /**
-     * Notifies listeners of a phase change.
-     */
+    /** Notifies listeners of a phase change. */
     private void notifyPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
         for (ShutdownListener listener : listeners) {
             try {
                 listener.onPhaseChange(previous, current);
             } catch (Exception e) {
-                // Don't let listener errors break shutdown
+                LOGGER.log(Level.WARNING, "Shutdown listener failed on phase change", e);
             }
         }
     }
 
-    /**
-     * Notifies listeners of an error.
-     */
+    /** Notifies listeners of an error. */
     private void notifyError(ShutdownPhase errorPhase, Throwable error) {
         for (ShutdownListener listener : listeners) {
             try {
                 listener.onShutdownError(errorPhase, error);
             } catch (Exception e) {
-                // Don't let listener errors break shutdown
+                LOGGER.log(Level.WARNING, "Shutdown listener failed on error notification", e);
             }
         }
     }

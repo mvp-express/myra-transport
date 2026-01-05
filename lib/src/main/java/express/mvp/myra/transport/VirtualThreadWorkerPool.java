@@ -2,12 +2,16 @@ package express.mvp.myra.transport;
 
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * High-performance worker pool using Java 21+ virtual threads for I/O event processing.
+ * High-performance worker pool using Java 25+ virtual threads for I/O event processing.
  *
  * <p>This worker pool leverages Project Loom's virtual threads to handle millions of concurrent
  * tasks with minimal overhead. Unlike traditional thread pools that are constrained by OS thread
@@ -41,11 +45,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h2>Key Features</h2>
  *
  * <ul>
- *   <li><b>Lightweight:</b> Virtual threads use ~1KB stack vs ~1MB for platform threads</li>
- *   <li><b>High concurrency:</b> Millions of concurrent tasks without OS limits</li>
- *   <li><b>Blocking-friendly:</b> Blocking operations yield to carrier, don't waste resources</li>
- *   <li><b>Graceful shutdown:</b> Configurable timeout for pending tasks</li>
- *   <li><b>Metrics:</b> Track submitted, completed, and active tasks</li>
+ *   <li><b>Lightweight:</b> Virtual threads use ~1KB stack vs ~1MB for platform threads
+ *   <li><b>High concurrency:</b> Millions of concurrent tasks without OS limits
+ *   <li><b>Blocking-friendly:</b> Blocking operations yield to carrier, don't waste resources
+ *   <li><b>Graceful shutdown:</b> Configurable timeout for pending tasks
+ *   <li><b>Metrics:</b> Track submitted, completed, and active tasks
  * </ul>
  *
  * <h2>When to Use Virtual Threads</h2>
@@ -87,8 +91,8 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <h2>Memory Model</h2>
  *
- * <p>Task submission establishes a happens-before relationship with task execution.
- * All writes before {@link #submit(Runnable)} are visible to the task.
+ * <p>Task submission establishes a happens-before relationship with task execution. All writes
+ * before {@link #submit(Runnable)} are visible to the task.
  *
  * @see VirtualThreadFactory
  * @see java.util.concurrent.Executors#newVirtualThreadPerTaskExecutor()
@@ -174,15 +178,16 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
 
         submittedTasks.incrementAndGet();
 
-        return executor.submit(() -> {
-            try {
-                task.run();
-                completedTasks.incrementAndGet();
-            } catch (Throwable t) {
-                failedTasks.incrementAndGet();
-                throw t;
-            }
-        });
+        return executor.submit(
+                () -> {
+                    try {
+                        task.run();
+                        completedTasks.incrementAndGet();
+                    } catch (Throwable t) {
+                        failedTasks.incrementAndGet();
+                        throw t;
+                    }
+                });
     }
 
     /**
@@ -203,23 +208,24 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
 
         submittedTasks.incrementAndGet();
 
-        return executor.submit(() -> {
-            try {
-                T result = task.call();
-                completedTasks.incrementAndGet();
-                return result;
-            } catch (Throwable t) {
-                failedTasks.incrementAndGet();
-                throw t;
-            }
-        });
+        return executor.submit(
+                () -> {
+                    try {
+                        T result = task.call();
+                        completedTasks.incrementAndGet();
+                        return result;
+                    } catch (Throwable t) {
+                        failedTasks.incrementAndGet();
+                        throw t;
+                    }
+                });
     }
 
     /**
      * Executes a task without returning a Future.
      *
-     * <p>This is a fire-and-forget method. If you need to track completion,
-     * use {@link #submit(Runnable)} instead.
+     * <p>This is a fire-and-forget method. If you need to track completion, use {@link
+     * #submit(Runnable)} instead.
      *
      * @param task the task to execute
      * @throws NullPointerException if task is null
@@ -229,8 +235,8 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
     }
 
     /**
-     * Initiates an orderly shutdown where previously submitted tasks are executed,
-     * but no new tasks will be accepted.
+     * Initiates an orderly shutdown where previously submitted tasks are executed, but no new tasks
+     * will be accepted.
      *
      * <p>Invocation has no additional effect if already shut down.
      *
@@ -250,8 +256,8 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
     /**
      * Attempts to stop all actively executing tasks and halts processing of waiting tasks.
      *
-     * <p>This method does not wait for tasks to terminate. Use {@link #shutdown(Duration)}
-     * for graceful shutdown.
+     * <p>This method does not wait for tasks to terminate. Use {@link #shutdown(Duration)} for
+     * graceful shutdown.
      */
     public void shutdownNow() {
         shutdown.set(true);
@@ -341,8 +347,7 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
                 completedTasks.get(),
                 failedTasks.get(),
                 rejectedTasks.get(),
-                threadFactory.getThreadCount()
-        );
+                threadFactory.getThreadCount());
     }
 
     @Override
@@ -353,19 +358,22 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
     @Override
     public String toString() {
         return "VirtualThreadWorkerPool["
-                + "submitted=" + submittedTasks.get()
-                + ", completed=" + completedTasks.get()
-                + ", failed=" + failedTasks.get()
-                + ", threads=" + threadFactory.getThreadCount()
-                + ", shutdown=" + shutdown.get()
+                + "submitted="
+                + submittedTasks.get()
+                + ", completed="
+                + completedTasks.get()
+                + ", failed="
+                + failedTasks.get()
+                + ", threads="
+                + threadFactory.getThreadCount()
+                + ", shutdown="
+                + shutdown.get()
                 + "]";
     }
 
     // ========== Builder ==========
 
-    /**
-     * Builder for creating {@link VirtualThreadWorkerPool} instances.
-     */
+    /** Builder for creating {@link VirtualThreadWorkerPool} instances. */
     public static final class Builder {
 
         private String namePrefix = "vthread-worker";
@@ -387,8 +395,8 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
         /**
          * Sets whether worker threads should be daemon threads.
          *
-         * <p>Note: Virtual threads don't truly support daemon flag - they don't
-         * prevent JVM shutdown regardless.
+         * <p>Note: Virtual threads don't truly support daemon flag - they don't prevent JVM
+         * shutdown regardless.
          *
          * @param daemon true for daemon threads
          * @return this builder
@@ -404,9 +412,7 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
          * @return a new VirtualThreadWorkerPool
          */
         public VirtualThreadWorkerPool build() {
-            return new VirtualThreadWorkerPool(
-                    new VirtualThreadFactory(namePrefix, daemon)
-            );
+            return new VirtualThreadWorkerPool(new VirtualThreadFactory(namePrefix, daemon));
         }
     }
 
@@ -421,13 +427,7 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
      * @param rejected number of tasks rejected after shutdown
      * @param threads number of virtual threads created
      */
-    public record Stats(
-            long submitted,
-            long completed,
-            long failed,
-            long rejected,
-            long threads
-    ) {
+    public record Stats(long submitted, long completed, long failed, long rejected, long threads) {
         /**
          * Returns the success rate as a percentage (0-100).
          *
@@ -441,9 +441,9 @@ public final class VirtualThreadWorkerPool implements AutoCloseable {
         @Override
         public String toString() {
             return String.format(
-                    "Stats[submitted=%d, completed=%d, failed=%d, rejected=%d, threads=%d, successRate=%.1f%%]",
-                    submitted, completed, failed, rejected, threads, successRate()
-            );
+                    "Stats[submitted=%d, completed=%d, failed=%d, rejected=%d, threads=%d,"
+                            + " successRate=%.1f%%]",
+                    submitted, completed, failed, rejected, threads, successRate());
         }
     }
 }

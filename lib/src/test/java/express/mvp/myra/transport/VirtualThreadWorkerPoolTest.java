@@ -1,17 +1,22 @@
 package express.mvp.myra.transport;
 
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import org.junit.jupiter.api.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Comprehensive tests for {@link VirtualThreadWorkerPool}.
- */
+/** Comprehensive tests for {@link VirtualThreadWorkerPool}. */
+@SuppressFBWarnings(
+        value = {
+            "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION",
+            "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION",
+            "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"
+        },
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class VirtualThreadWorkerPoolTest {
 
     private VirtualThreadWorkerPool pool;
@@ -45,10 +50,7 @@ class VirtualThreadWorkerPoolTest {
     @Test
     @DisplayName("Create pool using builder")
     void createWithBuilder() {
-        pool = VirtualThreadWorkerPool.builder()
-                .namePrefix("test-worker")
-                .daemon(true)
-                .build();
+        pool = VirtualThreadWorkerPool.builder().namePrefix("test-worker").daemon(true).build();
         assertNotNull(pool);
         assertFalse(pool.isShutdown());
     }
@@ -62,10 +64,12 @@ class VirtualThreadWorkerPoolTest {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicInteger value = new AtomicInteger(0);
 
-        Future<?> future = pool.submit(() -> {
-            value.set(42);
-            latch.countDown();
-        });
+        Future<?> future =
+                pool.submit(
+                        () -> {
+                            value.set(42);
+                            latch.countDown();
+                        });
 
         assertNotNull(future);
         assertTrue(latch.await(5, TimeUnit.SECONDS));
@@ -118,10 +122,11 @@ class VirtualThreadWorkerPoolTest {
 
         for (int i = 0; i < taskCount; i++) {
             final int val = i;
-            pool.submit(() -> {
-                sum.addAndGet(val);
-                latch.countDown();
-            });
+            pool.submit(
+                    () -> {
+                        sum.addAndGet(val);
+                        latch.countDown();
+                    });
         }
 
         assertTrue(latch.await(30, TimeUnit.SECONDS));
@@ -142,15 +147,16 @@ class VirtualThreadWorkerPoolTest {
 
         // Submit many blocking tasks
         for (int i = 0; i < taskCount; i++) {
-            pool.submit(() -> {
-                startLatch.countDown();
-                try {
-                    Thread.sleep(100); // Blocking call - virtual thread yields
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                endLatch.countDown();
-            });
+            pool.submit(
+                    () -> {
+                        startLatch.countDown();
+                        try {
+                            Thread.sleep(100); // Blocking call - virtual thread yields
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        endLatch.countDown();
+                    });
         }
 
         // All tasks should start quickly despite blocking
@@ -186,10 +192,11 @@ class VirtualThreadWorkerPoolTest {
 
         // Submit tasks that throw exceptions
         for (int i = 0; i < 3; i++) {
-            pool.submit(() -> {
-                latch.countDown();
-                throw new RuntimeException("Test exception");
-            });
+            pool.submit(
+                    () -> {
+                        latch.countDown();
+                        throw new RuntimeException("Test exception");
+                    });
         }
 
         assertTrue(latch.await(5, TimeUnit.SECONDS));
@@ -243,14 +250,15 @@ class VirtualThreadWorkerPoolTest {
         CountDownLatch latch = new CountDownLatch(5);
 
         for (int i = 0; i < 5; i++) {
-            pool.submit(() -> {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                latch.countDown();
-            });
+            pool.submit(
+                    () -> {
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        latch.countDown();
+                    });
         }
 
         boolean completed = pool.shutdown(Duration.ofSeconds(10));
@@ -277,14 +285,15 @@ class VirtualThreadWorkerPoolTest {
         CountDownLatch startLatch = new CountDownLatch(1);
         AtomicInteger interrupted = new AtomicInteger(0);
 
-        pool.submit(() -> {
-            startLatch.countDown();
-            try {
-                Thread.sleep(10_000); // Long sleep
-            } catch (InterruptedException e) {
-                interrupted.incrementAndGet();
-            }
-        });
+        pool.submit(
+                () -> {
+                    startLatch.countDown();
+                    try {
+                        Thread.sleep(10_000); // Long sleep
+                    } catch (InterruptedException e) {
+                        interrupted.incrementAndGet();
+                    }
+                });
 
         assertTrue(startLatch.await(5, TimeUnit.SECONDS));
         pool.shutdownNow();
@@ -322,14 +331,15 @@ class VirtualThreadWorkerPoolTest {
         CountDownLatch blockLatch = new CountDownLatch(1);
 
         for (int i = 0; i < 5; i++) {
-            pool.submit(() -> {
-                startLatch.countDown();
-                try {
-                    blockLatch.await();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            pool.submit(
+                    () -> {
+                        startLatch.countDown();
+                        try {
+                            blockLatch.await();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    });
         }
 
         assertTrue(startLatch.await(5, TimeUnit.SECONDS));

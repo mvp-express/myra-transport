@@ -2,12 +2,13 @@ package express.mvp.myra.transport.memory;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Arena wrapper that integrates with ResourceTracker and NativeMemoryCleaner.
  *
- * <p>This class wraps a standard Arena with tracking and cleanup support, ensuring
- * memory is properly managed throughout its lifecycle.
+ * <p>This class wraps a standard Arena with tracking and cleanup support, ensuring memory is
+ * properly managed throughout its lifecycle.
  *
  * <h2>Features</h2>
  *
@@ -54,7 +55,7 @@ public final class TrackedArena implements AutoCloseable {
     private final long trackingId;
 
     /** Total bytes allocated. */
-    private long totalAllocated = 0;
+    private final AtomicLong totalAllocated = new AtomicLong(0);
 
     /** Whether the arena has been closed. */
     private volatile boolean closed = false;
@@ -71,24 +72,27 @@ public final class TrackedArena implements AutoCloseable {
         // Capture only what's needed, not 'this'
         Arena arenaRef = this.delegate;
         long trackId = this.trackingId;
-        this.cleanable = NativeMemoryCleaner.registerTracked(this, () -> {
-            if (!arenaRef.scope().isAlive()) {
-                return; // Already closed
-            }
-            try {
-                arenaRef.close();
-            } catch (IllegalStateException e) {
-                // Arena already closed or in use
-            }
-            ResourceTracker.getInstance().trackRelease(trackId);
-        });
+        this.cleanable =
+                NativeMemoryCleaner.registerTracked(
+                        this,
+                        () -> {
+                            if (!arenaRef.scope().isAlive()) {
+                                return; // Already closed
+                            }
+                            try {
+                                arenaRef.close();
+                            } catch (IllegalStateException e) {
+                                // Arena already closed or in use
+                            }
+                            ResourceTracker.getInstance().trackRelease(trackId);
+                        });
     }
 
     /**
      * Creates a tracked confined arena.
      *
-     * <p>Confined arenas can only be accessed from the thread that created them,
-     * but provide the best performance.
+     * <p>Confined arenas can only be accessed from the thread that created them, but provide the
+     * best performance.
      *
      * @param source identifier for tracking
      * @return a new tracked confined arena
@@ -112,8 +116,8 @@ public final class TrackedArena implements AutoCloseable {
     /**
      * Wraps an existing arena with tracking.
      *
-     * <p><b>Note:</b> The wrapped arena's lifecycle is now managed by this wrapper.
-     * The original arena should not be closed directly.
+     * <p><b>Note:</b> The wrapped arena's lifecycle is now managed by this wrapper. The original
+     * arena should not be closed directly.
      *
      * @param arena the arena to wrap
      * @param source identifier for tracking
@@ -132,7 +136,7 @@ public final class TrackedArena implements AutoCloseable {
      */
     public MemorySegment allocate(long byteSize) {
         checkOpen();
-        totalAllocated += byteSize;
+        totalAllocated.addAndGet(byteSize);
 
         ResourceTracker tracker = ResourceTracker.getInstance();
         if (tracker.isEnabled()) {
@@ -152,7 +156,7 @@ public final class TrackedArena implements AutoCloseable {
      */
     public MemorySegment allocate(long byteSize, long byteAlignment) {
         checkOpen();
-        totalAllocated += byteSize;
+        totalAllocated.addAndGet(byteSize);
 
         ResourceTracker tracker = ResourceTracker.getInstance();
         if (tracker.isEnabled()) {
@@ -186,7 +190,7 @@ public final class TrackedArena implements AutoCloseable {
      * @return total allocated bytes
      */
     public long getTotalAllocated() {
-        return totalAllocated;
+        return totalAllocated.get();
     }
 
     /**
@@ -204,9 +208,7 @@ public final class TrackedArena implements AutoCloseable {
         }
     }
 
-    /**
-     * Closes this arena and releases all memory.
-     */
+    /** Closes this arena and releases all memory. */
     @Override
     public void close() {
         if (closed) {
@@ -222,6 +224,6 @@ public final class TrackedArena implements AutoCloseable {
     public String toString() {
         return String.format(
                 "TrackedArena[source=%s, allocated=%d bytes, open=%s]",
-                source, totalAllocated, isOpen());
+                source, totalAllocated.get(), isOpen());
     }
 }

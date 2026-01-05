@@ -75,7 +75,8 @@ public final class NativeThread {
             gettid =
                     LINKER.downcallHandle(
                             STDLIB.find("gettid")
-                                    .orElseThrow(() -> new RuntimeException("gettid not found")),
+                                    .orElseThrow(
+                                            () -> new IllegalStateException("gettid not found")),
                             FunctionDescriptor.of(ValueLayout.JAVA_INT));
 
             sched_setaffinity =
@@ -83,7 +84,7 @@ public final class NativeThread {
                             STDLIB.find("sched_setaffinity")
                                     .orElseThrow(
                                             () ->
-                                                    new RuntimeException(
+                                                    new IllegalStateException(
                                                             "sched_setaffinity not found")),
                             FunctionDescriptor.of(
                                     ValueLayout.JAVA_INT,
@@ -91,8 +92,8 @@ public final class NativeThread {
                                     ValueLayout.JAVA_LONG, // size_t cpusetsize
                                     ValueLayout.ADDRESS // cpu_set_t *mask
                                     ));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize NativeThread", e);
+        } catch (RuntimeException | LinkageError e) {
+            throw new IllegalStateException("Failed to initialize NativeThread", e);
         }
     }
 
@@ -156,13 +157,13 @@ public final class NativeThread {
      *
      * <p>This is the Linux kernel's thread ID (TID), not the Java thread ID.\n * Useful for
      * debugging and native library interactions.\n *\n * @return the kernel thread ID\n * @throws
-     * RuntimeException if the syscall fails\n
+     * IllegalStateException if the syscall fails\n
      */
     public static int getCurrentThreadId() {
         try {
             return (int) gettid.invokeExact();
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to obtain native thread ID", e);
         }
     }
 }

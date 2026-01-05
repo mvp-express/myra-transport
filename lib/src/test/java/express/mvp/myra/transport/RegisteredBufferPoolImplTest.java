@@ -2,6 +2,7 @@ package express.mvp.myra.transport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.MemorySegment;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** Comprehensive test suite for RegisteredBufferPoolImpl. */
+@SuppressFBWarnings(
+        value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class RegisteredBufferPoolImplTest {
 
     private RegisteredBufferPoolImpl pool;

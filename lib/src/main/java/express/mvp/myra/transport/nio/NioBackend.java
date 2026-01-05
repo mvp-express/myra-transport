@@ -1,5 +1,6 @@
 package express.mvp.myra.transport.nio;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.BackendStats;
 import express.mvp.myra.transport.CompletionHandler;
 import express.mvp.myra.transport.RegisteredBuffer;
@@ -96,6 +97,9 @@ public final class NioBackend implements TransportBackend {
     private SocketChannel channel;
 
     /** Server socket channel for accepting incoming connections. */
+    @SuppressFBWarnings(
+            value = "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
+            justification = "Initialized during bind() when server mode is enabled.")
     private ServerSocketChannel serverChannel;
 
     /** Selector for non-blocking I/O multiplexing. */

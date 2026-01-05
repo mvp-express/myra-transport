@@ -10,19 +10,20 @@ import java.net.UnknownHostException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.channels.ClosedChannelException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import javax.net.ssl.SSLException;
 
 /**
  * Classifies exceptions into error categories for recovery decisions.
  *
- * <p>This classifier uses a combination of exception type matching and message analysis
- * to categorize errors appropriately. Custom classifiers can be registered for
- * application-specific exceptions.
+ * <p>This classifier uses a combination of exception type matching and message analysis to
+ * categorize errors appropriately. Custom classifiers can be registered for application-specific
+ * exceptions.
  *
  * <h2>Classification Strategy</h2>
  *
@@ -64,8 +65,8 @@ import javax.net.ssl.SSLException;
 public final class ErrorClassifier {
 
     /** Custom classifiers keyed by exception class. */
-    private static final Map<Class<? extends Throwable>, Predicate<Throwable>> CUSTOM_CLASSIFIERS =
-            new ConcurrentHashMap<>();
+    private static final Map<Class<? extends Throwable>, Function<Throwable, ErrorCategory>>
+            CUSTOM_CLASSIFIERS = new ConcurrentHashMap<>();
 
     private ErrorClassifier() {
         // Utility class
@@ -83,12 +84,12 @@ public final class ErrorClassifier {
         }
 
         // Check custom classifiers first
-        for (Map.Entry<Class<? extends Throwable>, Predicate<Throwable>> entry :
+        for (Map.Entry<Class<? extends Throwable>, Function<Throwable, ErrorCategory>> entry :
                 CUSTOM_CLASSIFIERS.entrySet()) {
             if (entry.getKey().isInstance(throwable)) {
-                if (entry.getValue().test(throwable)) {
-                    // Custom classifier returned true for its expected category
-                    // This is a simplified approach - full implementation would return category
+                ErrorCategory customCategory = entry.getValue().apply(throwable);
+                if (customCategory != null && customCategory != ErrorCategory.UNKNOWN) {
+                    return customCategory;
                 }
             }
         }
@@ -149,26 +150,34 @@ public final class ErrorClassifier {
         return ErrorCategory.UNKNOWN;
     }
 
-    /**
-     * Checks if the throwable is a network-related error.
-     */
+    /** Checks if the throwable is a network-related error. */
     private static boolean isNetworkError(Throwable t) {
         // Direct network exceptions
-        if (t instanceof ConnectException) return true;
-        if (t instanceof UnknownHostException) return true;
-        if (t instanceof NoRouteToHostException) return true;
-        if (t instanceof PortUnreachableException) return true;
-        if (t instanceof ClosedChannelException) return true;
+        if (t instanceof ConnectException) {
+            return true;
+        }
+        if (t instanceof UnknownHostException) {
+            return true;
+        }
+        if (t instanceof NoRouteToHostException) {
+            return true;
+        }
+        if (t instanceof PortUnreachableException) {
+            return true;
+        }
+        if (t instanceof ClosedChannelException) {
+            return true;
+        }
 
         // Socket exceptions (connection reset, broken pipe)
         if (t instanceof SocketException) {
             String msg = t.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase();
-                if (lower.contains("connection reset") ||
-                    lower.contains("broken pipe") ||
-                    lower.contains("connection refused") ||
-                    lower.contains("network is unreachable")) {
+                String lower = toLower(msg);
+                if (lower.contains("connection reset")
+                        || lower.contains("broken pipe")
+                        || lower.contains("connection refused")
+                        || lower.contains("network is unreachable")) {
                     return true;
                 }
             }
@@ -184,10 +193,10 @@ public final class ErrorClassifier {
         if (t instanceof IOException) {
             String msg = t.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase();
-                if (lower.contains("connection") ||
-                    lower.contains("socket") ||
-                    lower.contains("network")) {
+                String lower = toLower(msg);
+                if (lower.contains("connection")
+                        || lower.contains("socket")
+                        || lower.contains("network")) {
                     return true;
                 }
             }
@@ -196,17 +205,19 @@ public final class ErrorClassifier {
         return false;
     }
 
-    /**
-     * Checks if the throwable is a timeout error.
-     */
+    /** Checks if the throwable is a timeout error. */
     private static boolean isTimeoutError(Throwable t) {
-        if (t instanceof TimeoutException) return true;
-        if (t instanceof SocketTimeoutException) return true;
+        if (t instanceof TimeoutException) {
+            return true;
+        }
+        if (t instanceof SocketTimeoutException) {
+            return true;
+        }
 
         // Check message
         String msg = t.getMessage();
         if (msg != null) {
-            String lower = msg.toLowerCase();
+            String lower = toLower(msg);
             if (lower.contains("timeout") || lower.contains("timed out")) {
                 return true;
             }
@@ -215,25 +226,31 @@ public final class ErrorClassifier {
         return false;
     }
 
-    /**
-     * Checks if the throwable is a resource exhaustion error.
-     */
+    /** Checks if the throwable is a resource exhaustion error. */
     private static boolean isResourceError(Throwable t) {
-        if (t instanceof OutOfMemoryError) return true;
-        if (t instanceof RejectedExecutionException) return true;
+        if (t instanceof OutOfMemoryError) {
+            return true;
+        }
+        if (t instanceof RejectedExecutionException) {
+            return true;
+        }
 
         // Buffer errors
-        if (t instanceof BufferOverflowException) return true;
-        if (t instanceof BufferUnderflowException) return true;
+        if (t instanceof BufferOverflowException) {
+            return true;
+        }
+        if (t instanceof BufferUnderflowException) {
+            return true;
+        }
 
         // Check message
         String msg = t.getMessage();
         if (msg != null) {
-            String lower = msg.toLowerCase();
-            if (lower.contains("too many open files") ||
-                lower.contains("buffer pool") ||
-                lower.contains("out of memory") ||
-                lower.contains("resource") && lower.contains("exhaust")) {
+            String lower = toLower(msg);
+            if (lower.contains("too many open files")
+                    || lower.contains("buffer pool")
+                    || lower.contains("out of memory")
+                    || lower.contains("resource") && lower.contains("exhaust")) {
                 return true;
             }
         }
@@ -241,18 +258,16 @@ public final class ErrorClassifier {
         return false;
     }
 
-    /**
-     * Checks if the throwable is a protocol/data error.
-     */
+    /** Checks if the throwable is a protocol/data error. */
     private static boolean isProtocolError(Throwable t) {
         if (t instanceof IllegalArgumentException) {
             String msg = t.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase();
-                if (lower.contains("frame") ||
-                    lower.contains("protocol") ||
-                    lower.contains("malformed") ||
-                    lower.contains("invalid") && lower.contains("message")) {
+                String lower = toLower(msg);
+                if (lower.contains("frame")
+                        || lower.contains("protocol")
+                        || lower.contains("malformed")
+                        || lower.contains("invalid") && lower.contains("message")) {
                     return true;
                 }
             }
@@ -261,10 +276,10 @@ public final class ErrorClassifier {
         if (t instanceof IllegalStateException) {
             String msg = t.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase();
-                if (lower.contains("unexpected") ||
-                    lower.contains("protocol") ||
-                    lower.contains("state")) {
+                String lower = toLower(msg);
+                if (lower.contains("unexpected")
+                        || lower.contains("protocol")
+                        || lower.contains("state")) {
                     return true;
                 }
             }
@@ -273,45 +288,45 @@ public final class ErrorClassifier {
         return false;
     }
 
-    /**
-     * Attempts to classify by analyzing the exception message.
-     */
+    /** Attempts to classify by analyzing the exception message. */
     private static ErrorCategory classifyByMessage(Throwable t) {
         String msg = t.getMessage();
         if (msg == null || msg.isEmpty()) {
             return null;
         }
 
-        String lower = msg.toLowerCase();
+        String lower = toLower(msg);
 
         // Network patterns
-        if (lower.contains("connection") && 
-            (lower.contains("reset") || lower.contains("refused") || 
-             lower.contains("closed") || lower.contains("lost"))) {
+        if (lower.contains("connection")
+                && (lower.contains("reset")
+                        || lower.contains("refused")
+                        || lower.contains("closed")
+                        || lower.contains("lost"))) {
             return ErrorCategory.NETWORK;
         }
 
         // Transient patterns
-        if (lower.contains("busy") ||
-            lower.contains("temporarily") ||
-            lower.contains("retry") ||
-            lower.contains("again")) {
+        if (lower.contains("busy")
+                || lower.contains("temporarily")
+                || lower.contains("retry")
+                || lower.contains("again")) {
             return ErrorCategory.TRANSIENT;
         }
 
         // Resource patterns
-        if (lower.contains("memory") ||
-            lower.contains("buffer") ||
-            lower.contains("limit") ||
-            lower.contains("quota")) {
+        if (lower.contains("memory")
+                || lower.contains("buffer")
+                || lower.contains("limit")
+                || lower.contains("quota")) {
             return ErrorCategory.RESOURCE;
         }
 
         // Protocol patterns
-        if (lower.contains("invalid") ||
-            lower.contains("malformed") ||
-            lower.contains("unexpected") ||
-            lower.contains("corrupt")) {
+        if (lower.contains("invalid")
+                || lower.contains("malformed")
+                || lower.contains("unexpected")
+                || lower.contains("corrupt")) {
             return ErrorCategory.PROTOCOL;
         }
 
@@ -321,16 +336,16 @@ public final class ErrorClassifier {
     /**
      * Registers a custom classifier for a specific exception type.
      *
-     * <p>Custom classifiers are checked before built-in classification. The predicate
-     * receives the exception and should return true if it matches the custom category.
+     * <p>Custom classifiers are checked before built-in classification. The predicate receives the
+     * exception and should return the desired category, or {@link ErrorCategory#UNKNOWN} to fall
+     * back to built-in classification.
      *
      * @param exceptionType the exception class to match
-     * @param classifier predicate that returns true if exception matches expected category
+     * @param classifier function that returns a category for the exception
      * @param <T> the exception type
      */
     public static <T extends Throwable> void registerClassifier(
-            Class<T> exceptionType,
-            Predicate<Throwable> classifier) {
+            Class<T> exceptionType, Function<Throwable, ErrorCategory> classifier) {
         CUSTOM_CLASSIFIERS.put(exceptionType, classifier);
     }
 
@@ -343,9 +358,7 @@ public final class ErrorClassifier {
         CUSTOM_CLASSIFIERS.remove(exceptionType);
     }
 
-    /**
-     * Clears all custom classifiers.
-     */
+    /** Clears all custom classifiers. */
     public static void clearCustomClassifiers() {
         CUSTOM_CLASSIFIERS.clear();
     }
@@ -375,5 +388,9 @@ public final class ErrorClassifier {
         }
 
         return sb.toString();
+    }
+
+    private static String toLower(String value) {
+        return value.toLowerCase(Locale.ROOT);
     }
 }

@@ -78,12 +78,12 @@ public final class TransportFactory {
         backend.registerBufferPool(bufferPool);
 
         return new TcpTransport(
-            backend,
-            bufferPool,
-            remoteAddress,
-            config.cpuAffinity(),
-            config.bufferMode(),
-            config.zeroCopySendMinBytes());
+                backend,
+                bufferPool,
+                remoteAddress,
+                config.cpuAffinity(),
+                config.bufferMode(),
+                config.zeroCopySendMinBytes());
     }
 
     /**

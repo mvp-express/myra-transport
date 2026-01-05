@@ -13,9 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link ResourceTracker}.
- */
+/** Unit tests for {@link ResourceTracker}. */
 @DisplayName("ResourceTracker")
 class ResourceTrackerTest {
 
@@ -254,8 +252,8 @@ class ResourceTrackerTest {
             long id1 = tracker.trackAllocation("test1", 100);
             long id2 = tracker.trackAllocation("test2", 200);
 
-            tracker.trackRelease(id1);
-            tracker.trackRelease(id2);
+            assertTrue(tracker.trackRelease(id1));
+            assertTrue(tracker.trackRelease(id2));
 
             assertEquals(300, tracker.getTotalReleased());
         }
@@ -276,8 +274,8 @@ class ResourceTrackerTest {
             long id1 = tracker.trackAllocation("test1", 100);
             long id2 = tracker.trackAllocation("test2", 200);
 
-            tracker.trackRelease(id1);
-            tracker.trackRelease(id2);
+            assertTrue(tracker.trackRelease(id1));
+            assertTrue(tracker.trackRelease(id2));
 
             assertEquals(2, tracker.getReleaseCount());
         }
@@ -289,7 +287,7 @@ class ResourceTrackerTest {
             tracker.trackAllocation("test2", 200);
             long id3 = tracker.trackAllocation("test3", 300);
 
-            tracker.trackRelease(id3);
+            assertTrue(tracker.trackRelease(id3));
 
             assertEquals(300, tracker.getActiveAllocationBytes());
         }
@@ -320,21 +318,23 @@ class ResourceTrackerTest {
 
             for (int t = 0; t < threadCount; t++) {
                 int threadId = t;
-                executor.submit(() -> {
-                    try {
-                        for (int i = 0; i < allocationsPerThread; i++) {
-                            tracker.trackAllocation("thread-" + threadId, 100);
-                        }
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+                executor.execute(
+                        () -> {
+                            try {
+                                for (int i = 0; i < allocationsPerThread; i++) {
+                                    tracker.trackAllocation("thread-" + threadId, 100);
+                                }
+                            } finally {
+                                latch.countDown();
+                            }
+                        });
             }
 
-            latch.await(10, TimeUnit.SECONDS);
+            assertTrue(latch.await(10, TimeUnit.SECONDS));
             executor.shutdown();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
 
-            assertEquals(threadCount * allocationsPerThread, tracker.getAllocationCount());
+            assertEquals((long) threadCount * allocationsPerThread, tracker.getAllocationCount());
         }
     }
 

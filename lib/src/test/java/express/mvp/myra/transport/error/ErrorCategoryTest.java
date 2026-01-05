@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link ErrorCategory}.
- */
+/** Unit tests for {@link ErrorCategory}. */
 @DisplayName("ErrorCategory")
 class ErrorCategoryTest {
 

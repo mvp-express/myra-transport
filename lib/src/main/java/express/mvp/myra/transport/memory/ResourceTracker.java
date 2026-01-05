@@ -1,5 +1,6 @@
 package express.mvp.myra.transport.memory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,8 +11,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Tracks native memory allocations for debugging and leak detection.
  *
- * <p>This tracker maintains a registry of all active allocations with their metadata,
- * enabling detection of memory leaks and analysis of allocation patterns.
+ * <p>This tracker maintains a registry of all active allocations with their metadata, enabling
+ * detection of memory leaks and analysis of allocation patterns.
  *
  * <h2>Design Goals</h2>
  *
@@ -97,6 +98,9 @@ public final class ResourceTracker {
      *
      * @return the tracker instance
      */
+    @SuppressFBWarnings(
+            value = "MS_EXPOSE_REP",
+            justification = "Singleton instance is intentionally shared.")
     public static ResourceTracker getInstance() {
         return INSTANCE;
     }
@@ -144,12 +148,11 @@ public final class ResourceTracker {
         }
 
         long id = idGenerator.getAndIncrement();
-        StackTraceElement[] stackTrace = captureStackTraces
-                ? Thread.currentThread().getStackTrace()
-                : null;
+        StackTraceElement[] stackTrace =
+                captureStackTraces ? Thread.currentThread().getStackTrace() : null;
 
-        AllocationRecord record = new AllocationRecord(
-                id, source, sizeBytes, Instant.now(), stackTrace);
+        AllocationRecord record =
+                new AllocationRecord(id, source, sizeBytes, Instant.now(), stackTrace);
 
         allocations.put(id, record);
         totalAllocated.addAndGet(sizeBytes);
@@ -202,9 +205,7 @@ public final class ResourceTracker {
      * @return total active allocation size
      */
     public long getActiveAllocationBytes() {
-        return allocations.values().stream()
-                .mapToLong(AllocationRecord::getSize)
-                .sum();
+        return allocations.values().stream().mapToLong(AllocationRecord::getSize).sum();
     }
 
     /**
@@ -243,9 +244,7 @@ public final class ResourceTracker {
         return releaseCount.get();
     }
 
-    /**
-     * Clears all tracking data.
-     */
+    /** Clears all tracking data. */
     public void clear() {
         allocations.clear();
         totalAllocated.set(0);
@@ -270,9 +269,7 @@ public final class ResourceTracker {
                 releaseCount.get());
     }
 
-    /**
-     * Record of a tracked allocation.
-     */
+    /** Record of a tracked allocation. */
     public static final class AllocationRecord {
         private final long id;
         private final String source;
@@ -335,7 +332,7 @@ public final class ResourceTracker {
          * @return the stack trace or null
          */
         public StackTraceElement[] getStackTrace() {
-            return stackTrace;
+            return stackTrace == null ? null : stackTrace.clone();
         }
 
         /**

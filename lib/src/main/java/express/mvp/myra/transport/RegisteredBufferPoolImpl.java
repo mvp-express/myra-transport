@@ -1,5 +1,6 @@
 package express.mvp.myra.transport;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -138,7 +139,9 @@ public final class RegisteredBufferPoolImpl implements RegisteredBufferPool {
                     baseSegment.asSlice((long) i * alignedBufferSize, alignedBufferSize);
             RegisteredBufferImpl buffer = new RegisteredBufferImpl(i, segment, this);
             buffers[i] = buffer;
-            availableBuffers.offer(buffer);
+            if (!availableBuffers.offer(buffer)) {
+                throw new IllegalStateException("Failed to initialize buffer pool queue");
+            }
         }
     }
 
@@ -192,7 +195,9 @@ public final class RegisteredBufferPoolImpl implements RegisteredBufferPool {
         impl.markAvailable();
         impl.clear(); // Reset position=0, limit=capacity
         inUseCount.decrementAndGet();
-        availableBuffers.offer(impl);
+        if (!availableBuffers.offer(impl)) {
+            throw new IllegalStateException("Buffer pool queue is full");
+        }
     }
 
     @Override
@@ -221,8 +226,11 @@ public final class RegisteredBufferPoolImpl implements RegisteredBufferPool {
      *
      * @return array of all buffers in the pool (length equals {@link #capacity()})
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "Backend registration requires access to the pool's buffer objects.")
     public RegisteredBuffer[] getAllBuffers() {
-        return buffers;
+        return buffers.clone();
     }
 
     /**
@@ -271,16 +279,16 @@ public final class RegisteredBufferPoolImpl implements RegisteredBufferPool {
         private final RegisteredBufferPoolImpl pool;
 
         /** Current read/write position in the buffer. */
-        private long position;
+        private volatile long position;
 
         /** Upper bound for read/write operations. */
-        private long limit;
+        private volatile long limit;
 
         /** Flag indicating whether this buffer is currently acquired. */
         private volatile boolean inUse;
 
         /** User-defined token for tracking through I/O operations. */
-        private long token;
+        private volatile long token;
 
         /**
          * Creates a new buffer implementation.

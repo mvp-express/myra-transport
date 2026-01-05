@@ -1,13 +1,14 @@
 package express.mvp.myra.transport.error;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
 import java.time.Instant;
 
 /**
  * Tracks the state of retry attempts for an operation.
  *
- * <p>This class maintains information about retry attempts including counts, timing,
- * and the last error encountered. It's used by {@link RetryPolicy} to make retry decisions.
+ * <p>This class maintains information about retry attempts including counts, timing, and the last
+ * error encountered. It's used by {@link RetryPolicy} to make retry decisions.
  *
  * <h2>Usage Example</h2>
  *
@@ -149,6 +150,9 @@ public final class RetryContext {
      *
      * @param error the error that caused the failure
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "Throwable is kept for diagnostics and cannot be safely copied.")
     public void recordFailure(Throwable error) {
         this.lastError = error;
         this.lastErrorCategory = ErrorClassifier.classify(error);
@@ -160,6 +164,9 @@ public final class RetryContext {
      * @param error the error that caused the failure
      * @param category the error category
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "Throwable is kept for diagnostics and cannot be safely copied.")
     public void recordFailure(Throwable error, ErrorCategory category) {
         this.lastError = error;
         this.lastErrorCategory = category;
@@ -170,6 +177,9 @@ public final class RetryContext {
      *
      * @return the last error, or null if no failures yet
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "Throwable is exposed for diagnostics and cannot be safely copied.")
     public Throwable getLastError() {
         return lastError;
     }
@@ -266,9 +276,7 @@ public final class RetryContext {
         return attemptCount >= maxAttempts;
     }
 
-    /**
-     * Resets the context for reuse.
-     */
+    /** Resets the context for reuse. */
     public void reset() {
         this.attemptCount = 0;
         this.lastError = null;

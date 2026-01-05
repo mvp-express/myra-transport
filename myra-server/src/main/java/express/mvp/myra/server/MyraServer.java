@@ -1,5 +1,6 @@
 package express.mvp.myra.server;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.BackendStats;
 import express.mvp.myra.transport.CompletionHandler;
 import express.mvp.myra.transport.RegisteredBuffer;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * High-level server API for Myra Transport.
@@ -111,10 +113,13 @@ public class MyraServer implements AutoCloseable {
     private final MyraServerHandler handler;
 
     /** Backend for the server socket (accept operations). */
-    private TransportBackend serverBackend;
+    @SuppressFBWarnings(
+            value = "AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD",
+            justification = "Backend is confined to the I/O thread; shutdown joins before cleanup.")
+    private volatile TransportBackend serverBackend;
 
     /** Shared buffer pool for all connections. */
-    private RegisteredBufferPool bufferPool;
+    private volatile RegisteredBufferPool bufferPool;
 
     /** List of active client connections. */
     private final List<ConnectionContext> connections = new ArrayList<>();
@@ -218,9 +223,10 @@ public class MyraServer implements AutoCloseable {
     @Override
     public void close() {
         running.set(false);
-        if (serverBackend != null) {
+        TransportBackend backend = serverBackend;
+        if (backend != null) {
             try {
-                serverBackend.close();
+                backend.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -229,7 +235,8 @@ public class MyraServer implements AutoCloseable {
             try {
                 ctx.backend.close();
             } catch (Exception e) {
-                // Ignore errors during cleanup
+                System.err.println("MyraServer: Failed to close connection backend");
+                e.printStackTrace();
             }
         }
         connections.clear();
@@ -252,7 +259,11 @@ public class MyraServer implements AutoCloseable {
 
             // Start accepting connections
             serverBackend.accept(TOKEN_ACCEPT);
-            serverBackend.submitBatch();
+            int initialSubmit = serverBackend.submitBatch();
+            if (initialSubmit < 0) {
+                System.err.println(
+                        "MyraServer: submitBatch failed during startup: " + initialSubmit);
+            }
 
             // Signal that server is ready to accept connections
             readyLatch.countDown();
@@ -269,7 +280,10 @@ public class MyraServer implements AutoCloseable {
 
             // Event loop
             while (running.get()) {
-                serverBackend.submitBatch();
+                int submitted = serverBackend.submitBatch();
+                if (submitted < 0) {
+                    System.err.println("MyraServer: submitBatch failed in loop: " + submitted);
+                }
                 int count = serverBackend.poll(completionHandler);
                 if (count == 0) {
                     Thread.onSpinWait(); // Busy spin for lowest latency
@@ -334,7 +348,10 @@ public class MyraServer implements AutoCloseable {
 
             // Re-arm accept for next connection
             serverBackend.accept(TOKEN_ACCEPT);
-            serverBackend.submitBatch();
+            int submitted = serverBackend.submitBatch();
+            if (submitted < 0) {
+                System.err.println("MyraServer: submitBatch failed after accept: " + submitted);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -416,7 +433,8 @@ public class MyraServer implements AutoCloseable {
         try {
             ctx.backend.close();
         } catch (Exception e) {
-            // Ignore errors during cleanup
+            System.err.println("MyraServer: Failed to close client backend");
+            e.printStackTrace();
         }
     }
 
@@ -428,7 +446,7 @@ public class MyraServer implements AutoCloseable {
      */
     private static class ConnectionContext {
         /** Connection ID generator. */
-        static long ID_GEN = 0;
+        static final AtomicLong ID_GEN = new AtomicLong(0);
 
         /** Unique identifier for this connection. */
         final long id;
@@ -460,7 +478,7 @@ public class MyraServer implements AutoCloseable {
          * @param backend the transport backend for this connection
          */
         ConnectionContext(TransportBackend backend) {
-            this.id = ++ID_GEN;
+            this.id = ID_GEN.incrementAndGet();
             this.backend = backend;
             this.wrapper = new TransportBackendWrapper(backend, this);
         }

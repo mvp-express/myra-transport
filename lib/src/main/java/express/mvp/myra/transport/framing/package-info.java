@@ -11,8 +11,8 @@
  * <ul>
  *   <li>{@link express.mvp.myra.transport.framing.FramingHandler} - Strategy interface for
  *       framing/deframing
- *   <li>{@link express.mvp.myra.transport.framing.LengthPrefixedFramingHandler} - 4-byte
- *       big-endian length prefix implementation
+ *   <li>{@link express.mvp.myra.transport.framing.LengthPrefixedFramingHandler} - 4-byte big-endian
+ *       length prefix implementation
  *   <li>{@link express.mvp.myra.transport.framing.FramingException} - Exception for framing errors
  * </ul>
  *
@@ -26,8 +26,8 @@
  *   <li><b>Fixed-length:</b> All messages have the same size
  * </ul>
  *
- * <p>This package currently provides length-prefixed framing, which is widely used in RPC
- * protocols and binary formats due to its efficiency and simplicity.
+ * <p>This package currently provides length-prefixed framing, which is widely used in RPC protocols
+ * and binary formats due to its efficiency and simplicity.
  *
  * <h2>Usage Example</h2>
  *

@@ -75,7 +75,7 @@ public final class TransportConfig {
     /** Whether to enable SQPOLL mode for syscall-free I/O. */
     private final boolean sqPollEnabled;
 
-    /** SQPOLL idle timeout in milliseconds before kernel thread sleeps. */
+    /** SQPOLL idle timeout in microseconds before kernel thread sleeps. */
     private final int sqPollIdleTimeout;
 
     /** Minimum payload size (bytes) before attempting SEND_ZC in ZERO_COPY mode. */
@@ -194,12 +194,12 @@ public final class TransportConfig {
     }
 
     /**
-     * Returns the SQPOLL idle timeout in milliseconds.
+     * Returns the SQPOLL idle timeout in microseconds.
      *
-     * <p>After this duration with no submissions, the kernel thread enters a sleep state to reduce
-     * CPU usage during idle periods.
+     * <p>After this duration with no submissions, the kernel thread enters a sleep state to
+     * reduce CPU usage during idle periods.
      *
-     * @return the idle timeout in milliseconds
+     * @return the idle timeout in microseconds
      */
     public int sqPollIdleTimeout() {
         return sqPollIdleTimeout;
@@ -270,7 +270,7 @@ public final class TransportConfig {
         private int cpuAffinity = -1;
         private int sqPollCpuAffinity = -1;
         private boolean sqPollEnabled = false;
-        private int sqPollIdleTimeout = 2000; // 2 seconds default
+        private int sqPollIdleTimeout = 2000; // 2000 microseconds default
         private int zeroCopySendMinBytes = 2048;
 
         /**
@@ -356,11 +356,11 @@ public final class TransportConfig {
         /**
          * Sets the SQPOLL idle timeout.
          *
-         * @param millis idle timeout in milliseconds before kernel thread sleeps
+         * @param micros idle timeout in microseconds before kernel thread sleeps
          * @return this builder for chaining
          */
-        public Builder sqPollIdleTimeout(int millis) {
-            this.sqPollIdleTimeout = millis;
+        public Builder sqPollIdleTimeout(int micros) {
+            this.sqPollIdleTimeout = micros;
             return this;
         }
 

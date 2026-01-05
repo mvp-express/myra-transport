@@ -2,16 +2,18 @@ package express.mvp.myra.transport.error;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link RetryPolicy} and {@link RetryContext}.
- */
+/** Unit tests for {@link RetryPolicy} and {@link RetryContext}. */
 @DisplayName("RetryPolicy")
+@SuppressFBWarnings(
+        value = {"RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class RetryPolicyTest {
 
     @Nested
@@ -91,8 +93,9 @@ class RetryPolicyTest {
         @Test
         @DisplayName("exponentialBackoff increases delay")
         void exponentialBackoff_increasesDelay() {
-            RetryPolicy policy = RetryPolicy.exponentialBackoff(
-                    5, Duration.ofMillis(100), Duration.ofSeconds(10));
+            RetryPolicy policy =
+                    RetryPolicy.exponentialBackoff(
+                            5, Duration.ofMillis(100), Duration.ofSeconds(10));
             RetryContext context = new RetryContext(policy.getMaxAttempts());
 
             // First attempt fails
@@ -117,8 +120,9 @@ class RetryPolicyTest {
         @Test
         @DisplayName("exponentialBackoff respects max delay")
         void exponentialBackoff_respectsMaxDelay() {
-            RetryPolicy policy = RetryPolicy.exponentialBackoff(
-                    10, Duration.ofMillis(100), Duration.ofMillis(500));
+            RetryPolicy policy =
+                    RetryPolicy.exponentialBackoff(
+                            10, Duration.ofMillis(100), Duration.ofMillis(500));
             RetryContext context = new RetryContext(policy.getMaxAttempts());
 
             // Run through many retries
@@ -126,8 +130,7 @@ class RetryPolicyTest {
                 context.startAttempt();
                 context.recordFailure(new RuntimeException());
                 long delay = policy.calculateDelay(context);
-                assertTrue(delay <= 500,
-                        "Delay " + delay + " should not exceed max 500ms");
+                assertTrue(delay <= 500, "Delay " + delay + " should not exceed max 500ms");
             }
         }
     }
@@ -139,8 +142,9 @@ class RetryPolicyTest {
         @Test
         @DisplayName("jitter varies delay")
         void jitter_variesDelay() {
-            RetryPolicy policy = RetryPolicy.exponentialBackoffWithJitter(
-                    5, Duration.ofMillis(100), Duration.ofSeconds(10), 0.5);
+            RetryPolicy policy =
+                    RetryPolicy.exponentialBackoffWithJitter(
+                            5, Duration.ofMillis(100), Duration.ofSeconds(10), 0.5);
             RetryContext context = new RetryContext(policy.getMaxAttempts());
 
             context.startAttempt();
@@ -168,8 +172,9 @@ class RetryPolicyTest {
         @DisplayName("jitter stays within bounds")
         void jitter_staysWithinBounds() {
             double jitter = 0.2;
-            RetryPolicy policy = RetryPolicy.exponentialBackoffWithJitter(
-                    5, Duration.ofMillis(100), Duration.ofSeconds(10), jitter);
+            RetryPolicy policy =
+                    RetryPolicy.exponentialBackoffWithJitter(
+                            5, Duration.ofMillis(100), Duration.ofSeconds(10), jitter);
             RetryContext context = new RetryContext(policy.getMaxAttempts());
 
             context.startAttempt();
@@ -181,7 +186,8 @@ class RetryPolicyTest {
                 context.startAttempt();
                 context.recordFailure(new RuntimeException());
                 long delay = policy.calculateDelay(context);
-                assertTrue(delay >= 80 && delay <= 120,
+                assertTrue(
+                        delay >= 80 && delay <= 120,
                         "Delay " + delay + " should be within jitter bounds");
             }
         }
@@ -195,15 +201,16 @@ class RetryPolicyTest {
 
         @BeforeEach
         void setup() {
-            policy = RetryPolicy.builder()
-                    .maxAttempts(5)
-                    .initialDelay(Duration.ofMillis(100))
-                    .maxDelay(Duration.ofSeconds(1))
-                    .retryTransient(true)
-                    .retryNetwork(true)
-                    .retryResource(true)
-                    .retryUnknown(false)
-                    .build();
+            policy =
+                    RetryPolicy.builder()
+                            .maxAttempts(5)
+                            .initialDelay(Duration.ofMillis(100))
+                            .maxDelay(Duration.ofSeconds(1))
+                            .retryTransient(true)
+                            .retryNetwork(true)
+                            .retryResource(true)
+                            .retryUnknown(false)
+                            .build();
         }
 
         @Test
@@ -211,9 +218,7 @@ class RetryPolicyTest {
         void transientErrors_areRetried() {
             RetryContext context = new RetryContext(policy.getMaxAttempts());
             context.startAttempt();
-            context.recordFailure(
-                    new RuntimeException("timeout"),
-                    ErrorCategory.TRANSIENT);
+            context.recordFailure(new RuntimeException("timeout"), ErrorCategory.TRANSIENT);
 
             assertTrue(policy.shouldRetry(context));
         }
@@ -223,9 +228,7 @@ class RetryPolicyTest {
         void networkErrors_areRetried() {
             RetryContext context = new RetryContext(policy.getMaxAttempts());
             context.startAttempt();
-            context.recordFailure(
-                    new RuntimeException("Connection reset"),
-                    ErrorCategory.NETWORK);
+            context.recordFailure(new RuntimeException("Connection reset"), ErrorCategory.NETWORK);
 
             assertTrue(policy.shouldRetry(context));
         }
@@ -235,9 +238,7 @@ class RetryPolicyTest {
         void protocolErrors_notRetried() {
             RetryContext context = new RetryContext(policy.getMaxAttempts());
             context.startAttempt();
-            context.recordFailure(
-                    new RuntimeException("Invalid frame"),
-                    ErrorCategory.PROTOCOL);
+            context.recordFailure(new RuntimeException("Invalid frame"), ErrorCategory.PROTOCOL);
 
             assertFalse(policy.shouldRetry(context));
         }
@@ -247,9 +248,7 @@ class RetryPolicyTest {
         void fatalErrors_notRetried() {
             RetryContext context = new RetryContext(policy.getMaxAttempts());
             context.startAttempt();
-            context.recordFailure(
-                    new RuntimeException("Security violation"),
-                    ErrorCategory.FATAL);
+            context.recordFailure(new RuntimeException("Security violation"), ErrorCategory.FATAL);
 
             assertFalse(policy.shouldRetry(context));
         }
@@ -259,9 +258,7 @@ class RetryPolicyTest {
         void unknownErrors_honorConfiguration() {
             RetryContext context = new RetryContext(policy.getMaxAttempts());
             context.startAttempt();
-            context.recordFailure(
-                    new RuntimeException("Something"),
-                    ErrorCategory.UNKNOWN);
+            context.recordFailure(new RuntimeException("Something"), ErrorCategory.UNKNOWN);
 
             // Our policy has retryUnknown = false
             assertFalse(policy.shouldRetry(context));
@@ -275,12 +272,13 @@ class RetryPolicyTest {
         @Test
         @DisplayName("Stops retries when max duration exceeded")
         void stopsRetries_whenMaxDurationExceeded() throws InterruptedException {
-            RetryPolicy policy = RetryPolicy.builder()
-                    .maxAttempts(100)
-                    .initialDelay(Duration.ofMillis(10))
-                    .maxDelay(Duration.ofMillis(100))
-                    .maxTotalDuration(Duration.ofMillis(100))
-                    .build();
+            RetryPolicy policy =
+                    RetryPolicy.builder()
+                            .maxAttempts(100)
+                            .initialDelay(Duration.ofMillis(10))
+                            .maxDelay(Duration.ofMillis(100))
+                            .maxTotalDuration(Duration.ofMillis(100))
+                            .build();
 
             RetryContext context = new RetryContext(policy.getMaxAttempts());
 
@@ -304,24 +302,28 @@ class RetryPolicyTest {
         @Test
         @DisplayName("maxAttempts must be >= 1")
         void maxAttempts_mustBePositive() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    RetryPolicy.builder().maxAttempts(0).build());
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> RetryPolicy.builder().maxAttempts(0).build());
         }
 
         @Test
         @DisplayName("backoffMultiplier must be >= 1.0")
         void backoffMultiplier_mustBeAtLeastOne() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    RetryPolicy.builder().backoffMultiplier(0.5).build());
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> RetryPolicy.builder().backoffMultiplier(0.5).build());
         }
 
         @Test
         @DisplayName("jitterFactor must be 0.0-1.0")
         void jitterFactor_mustBeValid() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    RetryPolicy.builder().jitterFactor(-0.1).build());
-            assertThrows(IllegalArgumentException.class, () ->
-                    RetryPolicy.builder().jitterFactor(1.1).build());
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> RetryPolicy.builder().jitterFactor(-0.1).build());
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> RetryPolicy.builder().jitterFactor(1.1).build());
         }
     }
 }
@@ -459,9 +461,7 @@ class RetryContextTest {
         void recordFailure_withExplicitCategory() {
             RetryContext context = new RetryContext(3);
 
-            context.recordFailure(
-                    new RuntimeException("Custom"),
-                    ErrorCategory.RESOURCE);
+            context.recordFailure(new RuntimeException("Custom"), ErrorCategory.RESOURCE);
 
             assertEquals(ErrorCategory.RESOURCE, context.getLastErrorCategory());
         }

@@ -1,15 +1,16 @@
 package express.mvp.myra.transport;
 
-import org.junit.jupiter.api.*;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests for {@link VirtualThreadFactory}.
- */
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.*;
+
+/** Tests for {@link VirtualThreadFactory}. */
+@SuppressFBWarnings(
+        value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class VirtualThreadFactoryTest {
 
     @Test
@@ -76,12 +77,15 @@ class VirtualThreadFactoryTest {
         // Create threads from multiple threads concurrently
         Thread[] creators = new Thread[10];
         for (int i = 0; i < creators.length; i++) {
-            creators[i] = Thread.ofPlatform().unstarted(() -> {
-                for (int j = 0; j < threadCount / creators.length; j++) {
-                    factory.newThread(() -> {});
-                    latch.countDown();
-                }
-            });
+            creators[i] =
+                    Thread.ofPlatform()
+                            .unstarted(
+                                    () -> {
+                                        for (int j = 0; j < threadCount / creators.length; j++) {
+                                            factory.newThread(() -> {});
+                                            latch.countDown();
+                                        }
+                                    });
         }
 
         for (Thread creator : creators) {

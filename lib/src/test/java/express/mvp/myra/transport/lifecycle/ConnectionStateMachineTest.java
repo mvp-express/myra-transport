@@ -2,6 +2,7 @@ package express.mvp.myra.transport.lifecycle;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,10 +18,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link ConnectionStateMachine}.
- */
+/** Unit tests for {@link ConnectionStateMachine}. */
 @DisplayName("ConnectionStateMachine")
+@SuppressFBWarnings(
+        value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class ConnectionStateMachineTest {
 
     private ConnectionStateMachine machine;
@@ -266,7 +268,8 @@ class ConnectionStateMachineTest {
         void closedIsTerminal() {
             for (ConnectionState target : ConnectionState.values()) {
                 if (target != ConnectionState.CLOSED) {
-                    assertFalse(machine.transitionTo(target),
+                    assertFalse(
+                            machine.transitionTo(target),
                             "Should not transition from CLOSED to " + target);
                 }
             }
@@ -282,7 +285,8 @@ class ConnectionStateMachineTest {
         @DisplayName("Self-transitions are not allowed")
         void selfTransitions_notAllowed() {
             for (ConnectionState state : ConnectionState.values()) {
-                assertFalse(ConnectionStateMachine.isValidTransition(state, state),
+                assertFalse(
+                        ConnectionStateMachine.isValidTransition(state, state),
                         "Self-transition should not be valid for " + state);
             }
         }
@@ -309,27 +313,22 @@ class ConnectionStateMachineTest {
         @Test
         @DisplayName("transitionFrom succeeds when state matches")
         void transitionFrom_succeedsWhenStateMatches() {
-            assertTrue(machine.transitionFrom(
-                    ConnectionState.NEW,
-                    ConnectionState.CONNECTING));
+            assertTrue(machine.transitionFrom(ConnectionState.NEW, ConnectionState.CONNECTING));
             assertEquals(ConnectionState.CONNECTING, machine.getState());
         }
 
         @Test
         @DisplayName("transitionFrom fails when state doesn't match")
         void transitionFrom_failsWhenStateMismatch() {
-            assertFalse(machine.transitionFrom(
-                    ConnectionState.CONNECTING,
-                    ConnectionState.CONNECTED));
+            assertFalse(
+                    machine.transitionFrom(ConnectionState.CONNECTING, ConnectionState.CONNECTED));
             assertEquals(ConnectionState.NEW, machine.getState());
         }
 
         @Test
         @DisplayName("transitionFrom fails for invalid transition")
         void transitionFrom_failsForInvalidTransition() {
-            assertFalse(machine.transitionFrom(
-                    ConnectionState.NEW,
-                    ConnectionState.CONNECTED));
+            assertFalse(machine.transitionFrom(ConnectionState.NEW, ConnectionState.CONNECTED));
             assertEquals(ConnectionState.NEW, machine.getState());
         }
     }
@@ -409,8 +408,7 @@ class ConnectionStateMachineTest {
         @DisplayName("Removed listener does not receive events")
         void removedListener_doesNotReceiveEvents() {
             AtomicInteger calls = new AtomicInteger(0);
-            ConnectionStateListener listener =
-                    (prev, curr, cause) -> calls.incrementAndGet();
+            ConnectionStateListener listener = (prev, curr, cause) -> calls.incrementAndGet();
 
             machine.addListener(listener);
             machine.transitionTo(ConnectionState.CONNECTING);
@@ -424,9 +422,10 @@ class ConnectionStateMachineTest {
         @Test
         @DisplayName("Listener errors do not break state machine")
         void listenerErrors_doNotBreakStateMachine() {
-            machine.addListener((prev, curr, cause) -> {
-                throw new RuntimeException("Listener error");
-            });
+            machine.addListener(
+                    (prev, curr, cause) -> {
+                        throw new RuntimeException("Listener error");
+                    });
 
             // Should not throw
             assertDoesNotThrow(() -> machine.transitionTo(ConnectionState.CONNECTING));
@@ -442,20 +441,26 @@ class ConnectionStateMachineTest {
         @DisplayName("isValidTransition returns correct results")
         void isValidTransition_returnsCorrectResults() {
             // Valid
-            assertTrue(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.NEW, ConnectionState.CONNECTING));
-            assertTrue(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.CONNECTING, ConnectionState.CONNECTED));
-            assertTrue(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.CONNECTED, ConnectionState.CLOSING));
-            assertTrue(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.CLOSING, ConnectionState.CLOSED));
+            assertTrue(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.NEW, ConnectionState.CONNECTING));
+            assertTrue(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.CONNECTING, ConnectionState.CONNECTED));
+            assertTrue(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.CONNECTED, ConnectionState.CLOSING));
+            assertTrue(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.CLOSING, ConnectionState.CLOSED));
 
             // Invalid
-            assertFalse(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.NEW, ConnectionState.CONNECTED));
-            assertFalse(ConnectionStateMachine.isValidTransition(
-                    ConnectionState.CLOSED, ConnectionState.NEW));
+            assertFalse(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.NEW, ConnectionState.CONNECTED));
+            assertFalse(
+                    ConnectionStateMachine.isValidTransition(
+                            ConnectionState.CLOSED, ConnectionState.NEW));
         }
 
         @Test
@@ -487,18 +492,20 @@ class ConnectionStateMachineTest {
 
             // All threads try to transition NEW -> CONNECTING
             for (int i = 0; i < numThreads; i++) {
-                new Thread(() -> {
-                    try {
-                        startLatch.await();
-                        if (machine.transitionTo(ConnectionState.CONNECTING)) {
-                            successCount.incrementAndGet();
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        doneLatch.countDown();
-                    }
-                }).start();
+                new Thread(
+                                () -> {
+                                    try {
+                                        startLatch.await();
+                                        if (machine.transitionTo(ConnectionState.CONNECTING)) {
+                                            successCount.incrementAndGet();
+                                        }
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    } finally {
+                                        doneLatch.countDown();
+                                    }
+                                })
+                        .start();
             }
 
             startLatch.countDown();

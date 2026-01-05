@@ -21,6 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/** Integration tests for {@link MyraServer} using a transport client. */
 class MyraServerTest {
 
     private MyraServer server;
@@ -44,7 +45,7 @@ class MyraServerTest {
     }
 
     @Test
-    void testConnectionAndEcho() throws Exception {
+    void testConnectionAndEcho() throws InterruptedException {
         // Setup Client
         TransportConfig clientConfig =
                 TransportConfig.builder()
@@ -68,12 +69,12 @@ class MyraServerTest {
 
         TcpTransport client =
                 new TcpTransport(
-                clientBackend,
-                clientPool,
-                new InetSocketAddress("127.0.0.1", 9999),
-                clientConfig.cpuAffinity(),
-                clientConfig.bufferMode(),
-                clientConfig.zeroCopySendMinBytes());
+                        clientBackend,
+                        clientPool,
+                        new InetSocketAddress("127.0.0.1", 9999),
+                        clientConfig.cpuAffinity(),
+                        clientConfig.bufferMode(),
+                        clientConfig.zeroCopySendMinBytes());
         client.start(
                 new TransportHandlerAdapter() {
                     @Override

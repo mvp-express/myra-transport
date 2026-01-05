@@ -22,6 +22,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * JMH benchmark that measures ping-pong latency across transport implementations and buffer
+ * modes.
+ *
+ * <p>Parameters toggle backend type, buffer mode, and CPU pinning to compare io_uring, NIO, and
+ * Netty under the same workload.
+ */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

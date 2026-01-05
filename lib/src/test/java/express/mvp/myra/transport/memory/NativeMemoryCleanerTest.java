@@ -2,8 +2,8 @@ package express.mvp.myra.transport.memory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.ref.Cleaner;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,10 +13,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link NativeMemoryCleaner}.
- */
+/** Unit tests for {@link NativeMemoryCleaner}. */
 @DisplayName("NativeMemoryCleaner")
+@SuppressFBWarnings(
+        value = {"DM_GC", "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class NativeMemoryCleanerTest {
 
     @BeforeEach
@@ -62,8 +63,8 @@ class NativeMemoryCleanerTest {
             AtomicBoolean cleaned = new AtomicBoolean(false);
             Object obj = new Object();
 
-            Cleaner.Cleanable cleanable = NativeMemoryCleaner.register(
-                    obj, () -> cleaned.set(true));
+            Cleaner.Cleanable cleanable =
+                    NativeMemoryCleaner.register(obj, () -> cleaned.set(true));
             cleanable.clean();
 
             assertTrue(cleaned.get());
@@ -89,8 +90,8 @@ class NativeMemoryCleanerTest {
             AtomicInteger cleanCount = new AtomicInteger(0);
             Object obj = new Object();
 
-            Cleaner.Cleanable cleanable = NativeMemoryCleaner.register(
-                    obj, cleanCount::incrementAndGet);
+            Cleaner.Cleanable cleanable =
+                    NativeMemoryCleaner.register(obj, cleanCount::incrementAndGet);
             cleanable.clean();
             cleanable.clean(); // Second clean
 
@@ -135,16 +136,19 @@ class NativeMemoryCleanerTest {
             }
 
             // Cleanup should have run
-            assertTrue(cleaned.get() || latch.await(1, TimeUnit.SECONDS),
+            assertTrue(
+                    cleaned.get() || latch.await(1, TimeUnit.SECONDS),
                     "Cleanup should run after GC");
         }
 
         private void createAndAbandon(AtomicBoolean cleaned, CountDownLatch latch) {
             Object obj = new Object();
-            NativeMemoryCleaner.register(obj, () -> {
-                cleaned.set(true);
-                latch.countDown();
-            });
+            NativeMemoryCleaner.register(
+                    obj,
+                    () -> {
+                        cleaned.set(true);
+                        latch.countDown();
+                    });
             // obj becomes unreachable after this method returns
         }
     }
@@ -192,9 +196,12 @@ class NativeMemoryCleanerTest {
         @DisplayName("Cleanup action exceptions propagate on explicit clean")
         void cleanupException_propagatesOnExplicitClean() {
             Object obj = new Object();
-            Cleaner.Cleanable cleanable = NativeMemoryCleaner.register(obj, () -> {
-                throw new RuntimeException("Cleanup error");
-            });
+            Cleaner.Cleanable cleanable =
+                    NativeMemoryCleaner.register(
+                            obj,
+                            () -> {
+                                throw new RuntimeException("Cleanup error");
+                            });
 
             // Exceptions propagate from explicit clean() calls
             assertThrows(RuntimeException.class, () -> cleanable.clean());

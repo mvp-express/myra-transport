@@ -2,6 +2,7 @@ package express.mvp.myra.transport.lifecycle;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,10 +20,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link ShutdownCoordinator}.
- */
+/** Unit tests for {@link ShutdownCoordinator}. */
 @DisplayName("ShutdownCoordinator")
+@SuppressFBWarnings(
+        value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class ShutdownCoordinatorTest {
 
     private ShutdownCoordinator coordinator;
@@ -108,10 +110,11 @@ class ShutdownCoordinatorTest {
             AtomicBoolean connectionsClosed = new AtomicBoolean(false);
             AtomicBoolean resourcesReleased = new AtomicBoolean(false);
 
-            boolean graceful = coordinator.shutdown(
-                    Duration.ofSeconds(1),
-                    () -> connectionsClosed.set(true),
-                    () -> resourcesReleased.set(true));
+            boolean graceful =
+                    coordinator.shutdown(
+                            Duration.ofSeconds(1),
+                            () -> connectionsClosed.set(true),
+                            () -> resourcesReleased.set(true));
 
             assertTrue(graceful);
             assertTrue(connectionsClosed.get());
@@ -128,14 +131,16 @@ class ShutdownCoordinatorTest {
             AtomicBoolean shutdownComplete = new AtomicBoolean(false);
 
             // Start shutdown in background
-            Thread shutdownThread = new Thread(() -> {
-                try {
-                    coordinator.shutdown(Duration.ofSeconds(2), () -> {}, () -> {});
-                    shutdownComplete.set(true);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            Thread shutdownThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    coordinator.shutdown(Duration.ofSeconds(2), () -> {}, () -> {});
+                                    shutdownComplete.set(true);
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            });
             shutdownThread.start();
 
             // Give time for shutdown to start
@@ -161,10 +166,7 @@ class ShutdownCoordinatorTest {
             coordinator.operationStarted();
 
             long start = System.currentTimeMillis();
-            boolean graceful = coordinator.shutdown(
-                    Duration.ofMillis(100),
-                    () -> {},
-                    () -> {});
+            boolean graceful = coordinator.shutdown(Duration.ofMillis(100), () -> {}, () -> {});
             long elapsed = System.currentTimeMillis() - start;
 
             assertFalse(graceful, "Should not be graceful due to timeout");
@@ -178,13 +180,16 @@ class ShutdownCoordinatorTest {
             // Start shutdown in background (with an in-flight op to make it wait)
             coordinator.operationStarted();
 
-            Thread shutdownThread = new Thread(() -> {
-                try {
-                    coordinator.shutdown(Duration.ofMillis(200), () -> {}, () -> {});
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            Thread shutdownThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    coordinator.shutdown(
+                                            Duration.ofMillis(200), () -> {}, () -> {});
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            });
             shutdownThread.start();
 
             // Give time for shutdown to start
@@ -223,8 +228,7 @@ class ShutdownCoordinatorTest {
             AtomicBoolean resourcesReleased = new AtomicBoolean(false);
 
             coordinator.shutdownNow(
-                    () -> connectionsClosed.set(true),
-                    () -> resourcesReleased.set(true));
+                    () -> connectionsClosed.set(true), () -> resourcesReleased.set(true));
 
             assertTrue(connectionsClosed.get());
             assertTrue(resourcesReleased.get());
@@ -252,17 +256,18 @@ class ShutdownCoordinatorTest {
         void listener_receivesPhaseChanges() throws InterruptedException {
             List<ShutdownPhase> phases = Collections.synchronizedList(new ArrayList<>());
 
-            coordinator.addListener(new ShutdownListener() {
-                @Override
-                public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
-                    phases.add(current);
-                }
+            coordinator.addListener(
+                    new ShutdownListener() {
+                        @Override
+                        public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
+                            phases.add(current);
+                        }
 
-                @Override
-                public void onShutdownComplete(boolean graceful, long durationMs) {
-                    // Record completion
-                }
-            });
+                        @Override
+                        public void onShutdownComplete(boolean graceful, long durationMs) {
+                            // Record completion
+                        }
+                    });
 
             coordinator.shutdown(Duration.ofSeconds(1), () -> {}, () -> {});
 
@@ -278,17 +283,17 @@ class ShutdownCoordinatorTest {
             AtomicBoolean gracefulReceived = new AtomicBoolean(false);
             AtomicLong durationReceived = new AtomicLong(0);
 
-            coordinator.addListener(new ShutdownListener() {
-                @Override
-                public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
-                }
+            coordinator.addListener(
+                    new ShutdownListener() {
+                        @Override
+                        public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {}
 
-                @Override
-                public void onShutdownComplete(boolean graceful, long durationMs) {
-                    gracefulReceived.set(graceful);
-                    durationReceived.set(durationMs);
-                }
-            });
+                        @Override
+                        public void onShutdownComplete(boolean graceful, long durationMs) {
+                            gracefulReceived.set(graceful);
+                            durationReceived.set(durationMs);
+                        }
+                    });
 
             coordinator.shutdown(Duration.ofSeconds(1), () -> {}, () -> {});
 
@@ -302,34 +307,35 @@ class ShutdownCoordinatorTest {
             AtomicInteger progressCalls = new AtomicInteger(0);
             AtomicReference<int[]> lastProgress = new AtomicReference<>();
 
-            coordinator.addListener(new ShutdownListener() {
-                @Override
-                public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
-                }
+            coordinator.addListener(
+                    new ShutdownListener() {
+                        @Override
+                        public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {}
 
-                @Override
-                public void onDrainProgress(int remaining, int total) {
-                    progressCalls.incrementAndGet();
-                    lastProgress.set(new int[]{remaining, total});
-                }
+                        @Override
+                        public void onDrainProgress(int remaining, int total) {
+                            progressCalls.incrementAndGet();
+                            lastProgress.set(new int[] {remaining, total});
+                        }
 
-                @Override
-                public void onShutdownComplete(boolean graceful, long durationMs) {
-                }
-            });
+                        @Override
+                        public void onShutdownComplete(boolean graceful, long durationMs) {}
+                    });
 
             // Start operations
             coordinator.operationStarted();
             coordinator.operationStarted();
 
             // Start shutdown in background
-            Thread shutdownThread = new Thread(() -> {
-                try {
-                    coordinator.shutdown(Duration.ofSeconds(1), () -> {}, () -> {});
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            Thread shutdownThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    coordinator.shutdown(Duration.ofSeconds(1), () -> {}, () -> {});
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            });
             shutdownThread.start();
 
             // Give time for drain to start
@@ -350,17 +356,18 @@ class ShutdownCoordinatorTest {
         void removedListener_doesNotReceiveEvents() throws InterruptedException {
             AtomicInteger calls = new AtomicInteger(0);
 
-            ShutdownListener listener = new ShutdownListener() {
-                @Override
-                public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
-                    calls.incrementAndGet();
-                }
+            ShutdownListener listener =
+                    new ShutdownListener() {
+                        @Override
+                        public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
+                            calls.incrementAndGet();
+                        }
 
-                @Override
-                public void onShutdownComplete(boolean graceful, long durationMs) {
-                    calls.incrementAndGet();
-                }
-            };
+                        @Override
+                        public void onShutdownComplete(boolean graceful, long durationMs) {
+                            calls.incrementAndGet();
+                        }
+                    };
 
             coordinator.addListener(listener);
             assertTrue(coordinator.removeListener(listener));
@@ -373,17 +380,18 @@ class ShutdownCoordinatorTest {
         @Test
         @DisplayName("Listener errors do not break shutdown")
         void listenerErrors_doNotBreakShutdown() throws InterruptedException {
-            coordinator.addListener(new ShutdownListener() {
-                @Override
-                public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
-                    throw new RuntimeException("Listener error");
-                }
+            coordinator.addListener(
+                    new ShutdownListener() {
+                        @Override
+                        public void onPhaseChange(ShutdownPhase previous, ShutdownPhase current) {
+                            throw new RuntimeException("Listener error");
+                        }
 
-                @Override
-                public void onShutdownComplete(boolean graceful, long durationMs) {
-                    throw new RuntimeException("Listener error");
-                }
-            });
+                        @Override
+                        public void onShutdownComplete(boolean graceful, long durationMs) {
+                            throw new RuntimeException("Listener error");
+                        }
+                    });
 
             // Should not throw
             boolean graceful = coordinator.shutdown(Duration.ofSeconds(1), () -> {}, () -> {});
@@ -407,22 +415,23 @@ class ShutdownCoordinatorTest {
             CountDownLatch doneLatch = new CountDownLatch(numThreads);
 
             for (int i = 0; i < numThreads; i++) {
-                executor.submit(() -> {
-                    try {
-                        startLatch.await();
-                        for (int j = 0; j < opsPerThread; j++) {
-                            if (coordinator.operationStarted()) {
-                                // Simulate some work
-                                Thread.sleep(1);
-                                coordinator.operationCompleted();
+                executor.submit(
+                        () -> {
+                            try {
+                                startLatch.await();
+                                for (int j = 0; j < opsPerThread; j++) {
+                                    if (coordinator.operationStarted()) {
+                                        // Simulate some work
+                                        Thread.sleep(1);
+                                        coordinator.operationCompleted();
+                                    }
+                                }
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            } finally {
+                                doneLatch.countDown();
                             }
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        doneLatch.countDown();
-                    }
-                });
+                        });
             }
 
             startLatch.countDown();
@@ -444,20 +453,21 @@ class ShutdownCoordinatorTest {
             AtomicInteger successCount = new AtomicInteger(0);
 
             for (int i = 0; i < numThreads; i++) {
-                new Thread(() -> {
-                    try {
-                        startLatch.await();
-                        boolean result = coordinator.shutdown(
-                                Duration.ofSeconds(1),
-                                () -> {},
-                                () -> {});
-                        successCount.incrementAndGet();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        doneLatch.countDown();
-                    }
-                }).start();
+                new Thread(
+                                () -> {
+                                    try {
+                                        startLatch.await();
+                                        boolean result =
+                                                coordinator.shutdown(
+                                                        Duration.ofSeconds(1), () -> {}, () -> {});
+                                        successCount.incrementAndGet();
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    } finally {
+                                        doneLatch.countDown();
+                                    }
+                                })
+                        .start();
             }
 
             startLatch.countDown();
@@ -478,14 +488,17 @@ class ShutdownCoordinatorTest {
             AtomicInteger rejectedOps = new AtomicInteger(0);
 
             // Start shutdown in background
-            Thread shutdownThread = new Thread(() -> {
-                try {
-                    shutdownStarted.countDown();
-                    coordinator.shutdown(Duration.ofMillis(500), () -> {}, () -> {});
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            Thread shutdownThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    shutdownStarted.countDown();
+                                    coordinator.shutdown(
+                                            Duration.ofMillis(500), () -> {}, () -> {});
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            });
             shutdownThread.start();
 
             // Wait for shutdown to start
@@ -526,13 +539,16 @@ class ShutdownCoordinatorTest {
             coordinator.operationStarted();
 
             // Start shutdown in background (will wait for our operation)
-            Thread shutdownThread = new Thread(() -> {
-                try {
-                    coordinator.shutdown(Duration.ofSeconds(10), () -> {}, () -> {});
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+            Thread shutdownThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    coordinator.shutdown(
+                                            Duration.ofSeconds(10), () -> {}, () -> {});
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            });
             shutdownThread.start();
 
             // Wait should timeout

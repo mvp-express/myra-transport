@@ -2,6 +2,7 @@ package express.mvp.myra.transport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.net.InetSocketAddress;
@@ -16,6 +17,16 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+/** Integration test that validates ping-pong messaging across supported backends. */
+@SuppressFBWarnings(
+        value = {
+            "DE_MIGHT_IGNORE",
+            "NM_CONFUSING",
+            "REC_CATCH_EXCEPTION",
+            "UUF_UNUSED_FIELD",
+            "UWF_UNWRITTEN_FIELD"
+        },
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class PingPongTest {
 
     private Transport server;
@@ -76,13 +87,14 @@ class PingPongTest {
         }
         clientPool = new RegisteredBufferPoolImpl(16, 1024);
         cBackend.registerBufferPool(clientPool);
-        client = new TcpTransport(
-            cBackend,
-            clientPool,
-            ADDRESS,
-            -1,
-            TransportConfig.BufferMode.STANDARD,
-            TransportConfig.builder().build().zeroCopySendMinBytes());
+        client =
+                new TcpTransport(
+                        cBackend,
+                        clientPool,
+                        ADDRESS,
+                        -1,
+                        TransportConfig.BufferMode.STANDARD,
+                        TransportConfig.builder().build().zeroCopySendMinBytes());
     }
 
     @ParameterizedTest

@@ -3,8 +3,8 @@ package express.mvp.myra.transport.lifecycle;
 /**
  * Represents the phases of transport shutdown.
  *
- * <p>Shutdown progresses through these phases in order, allowing for graceful resource cleanup
- * and completion of in-flight operations.
+ * <p>Shutdown progresses through these phases in order, allowing for graceful resource cleanup and
+ * completion of in-flight operations.
  *
  * <h2>Phase Transitions</h2>
  *
@@ -38,14 +38,15 @@ public enum ShutdownPhase {
      * Draining phase - graceful shutdown initiated.
      *
      * <p>During this phase:
+     *
      * <ul>
      *   <li>New operations are rejected
      *   <li>In-flight operations are allowed to complete
      *   <li>No new connections are accepted
      * </ul>
      *
-     * <p>The phase advances to {@link #CLOSING} when all in-flight operations complete
-     * or the drain timeout expires.
+     * <p>The phase advances to {@link #CLOSING} when all in-flight operations complete or the drain
+     * timeout expires.
      */
     DRAINING(1, "Draining"),
 
@@ -53,6 +54,7 @@ public enum ShutdownPhase {
      * Closing phase - actively closing connections.
      *
      * <p>During this phase:
+     *
      * <ul>
      *   <li>All connections are being closed
      *   <li>Backend resources are being released

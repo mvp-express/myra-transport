@@ -3,10 +3,8 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.spotbugs)
     checkstyle
+    id("com.vanniktech.maven.publish")
 }
-
-group = "express.mvp.myra.server"
-version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -42,19 +40,16 @@ tasks.withType<Checkstyle>().configureEach {
 }
 
 // SpotBugs configuration
-// NOTE: SpotBugs is disabled because it does not yet support Java 25 class files (version 69).
-// Re-enable when SpotBugs adds support for Java 25+.
 spotbugs {
-    ignoreFailures.set(true)  // Disabled until Java 25 support is added
+    toolVersion.set("4.9.8")
+    ignoreFailures.set(false)
     showStackTraces.set(true)
     showProgress.set(true)
     effort.set(com.github.spotbugs.snom.Effort.MAX)
     reportLevel.set(com.github.spotbugs.snom.Confidence.LOW)
 }
 
-// Disable SpotBugs tasks entirely for now
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
-    enabled = false  // Disabled until Java 25 support is added
     reports {
         create("html") {
             required.set(true)
@@ -70,6 +65,7 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 dependencies {
     implementation(project(":lib"))
     implementation("org.slf4j:slf4j-api:2.0.9")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
     
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -93,5 +89,45 @@ tasks.withType<Test> {
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    coordinates(
+        groupId = group.toString(),
+        artifactId = "myra-transport-server",
+        version = version.toString(),
+    )
+
+    pom {
+        name.set("myra-transport-server")
+        description.set("Server runtime for Myra Transport with io_uring support.")
+        inceptionYear.set("2025")
+        url.set("https://github.com/mvp-express/myra-transport")
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("mvp-express")
+                name.set("MVP Express Team")
+                email.set("hi@mvp.express")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/mvp-express/myra-transport")
+            connection.set("scm:git:git://github.com/mvp-express/myra-transport.git")
+            developerConnection.set("scm:git:ssh://git@github.com/mvp-express/myra-transport.git")
+        }
     }
 }

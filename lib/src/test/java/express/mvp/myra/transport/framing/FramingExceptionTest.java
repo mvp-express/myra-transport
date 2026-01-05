@@ -1,12 +1,10 @@
 package express.mvp.myra.transport.framing;
 
-import org.junit.jupiter.api.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests for {@link FramingException}.
- */
+import org.junit.jupiter.api.*;
+
+/** Tests for {@link FramingException}. */
 class FramingExceptionTest {
 
     @Test
@@ -51,9 +49,11 @@ class FramingExceptionTest {
     @Test
     @DisplayName("Exception can be thrown and caught")
     void canBeThrown() {
-        assertThrows(FramingException.class, () -> {
-            throw new FramingException("Test error");
-        });
+        assertThrows(
+                FramingException.class,
+                () -> {
+                    throw new FramingException("Test error");
+                });
     }
 
     @Test
@@ -64,7 +64,8 @@ class FramingExceptionTest {
 
         assertNotNull(trace);
         assertTrue(trace.length > 0);
-        assertTrue(trace[0].getMethodName().contains("preservesStackTrace") ||
-                   trace[0].getClassName().contains("FramingExceptionTest"));
+        assertTrue(
+                trace[0].getMethodName().contains("preservesStackTrace")
+                        || trace[0].getClassName().contains("FramingExceptionTest"));
     }
 }

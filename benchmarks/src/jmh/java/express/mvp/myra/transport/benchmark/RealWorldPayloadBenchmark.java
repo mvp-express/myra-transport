@@ -23,6 +23,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * JMH benchmark that exercises a larger payload to simulate real-world message sizes.
+ *
+ * <p>Compares transport implementations under a fixed payload size and configurable buffer modes.
+ */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

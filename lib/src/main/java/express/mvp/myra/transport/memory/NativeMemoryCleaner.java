@@ -83,6 +83,7 @@ public final class NativeMemoryCleaner {
      * Registers an object for cleanup when it becomes phantom reachable.
      *
      * <p>The cleanup action is called either:
+     *
      * <ol>
      *   <li>Explicitly via {@link Cleaner.Cleanable#clean()}, or
      *   <li>Automatically when the object is garbage collected
@@ -140,18 +141,14 @@ public final class NativeMemoryCleaner {
         return registrations.get() - explicitCleanups.get() - gcCleanups.get();
     }
 
-    /**
-     * Resets all statistics (for testing).
-     */
+    /** Resets all statistics (for testing). */
     public static void resetStatistics() {
         registrations.set(0);
         explicitCleanups.set(0);
         gcCleanups.set(0);
     }
 
-    /**
-     * Wrapper that tracks whether cleanup was explicit or GC-triggered.
-     */
+    /** Wrapper that tracks whether cleanup was explicit or GC-triggered. */
     private static final class CleanupActionWrapper implements Runnable {
         private final Runnable delegate;
         private volatile boolean cleaned = false;
@@ -161,9 +158,7 @@ public final class NativeMemoryCleaner {
             this.delegate = delegate;
         }
 
-        /**
-         * Marks this cleanup as explicit (called before GC).
-         */
+        /** Marks this cleanup as explicit (called before GC). */
         void markExplicit() {
             this.explicit = true;
         }
@@ -201,9 +196,7 @@ public final class NativeMemoryCleaner {
         return new TrackedCleanable(cleanable, wrapper);
     }
 
-    /**
-     * Cleanable wrapper that properly tracks explicit cleanup.
-     */
+    /** Cleanable wrapper that properly tracks explicit cleanup. */
     public static final class TrackedCleanable implements AutoCloseable {
         private final Cleaner.Cleanable cleanable;
         private final CleanupActionWrapper wrapper;
@@ -213,9 +206,7 @@ public final class NativeMemoryCleaner {
             this.wrapper = wrapper;
         }
 
-        /**
-         * Performs explicit cleanup.
-         */
+        /** Performs explicit cleanup. */
         public void clean() {
             wrapper.markExplicit();
             cleanable.clean();

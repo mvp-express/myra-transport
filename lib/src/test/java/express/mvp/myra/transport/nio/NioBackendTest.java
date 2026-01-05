@@ -2,6 +2,7 @@ package express.mvp.myra.transport.nio;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.*;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -25,6 +26,9 @@ import org.junit.jupiter.api.Test;
  *   <li>Error handling and state transitions
  * </ul>
  */
+@SuppressFBWarnings(
+        value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"},
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class NioBackendTest {
 
     private NioBackend clientBackend;

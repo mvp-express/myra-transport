@@ -9,8 +9,8 @@ import java.util.Objects;
  * A framing handler that uses a 4-byte big-endian length prefix.
  *
  * <p>This implementation frames messages by prepending a 4-byte (32-bit) unsigned integer in
- * network byte order (big-endian) that specifies the payload length. This is one of the most
- * common framing strategies used in network protocols.
+ * network byte order (big-endian) that specifies the payload length. This is one of the most common
+ * framing strategies used in network protocols.
  *
  * <h2>Frame Format</h2>
  *
@@ -26,10 +26,10 @@ import java.util.Objects;
  *
  * <h2>Configuration</h2>
  *
- * <p>The maximum payload size is configurable at construction time. The default is 16 MB
- * ({@value #DEFAULT_MAX_PAYLOAD_SIZE} bytes), which is suitable for most applications. For
- * protocols with smaller messages, a lower limit reduces memory requirements and provides
- * better protection against malformed length prefixes.
+ * <p>The maximum payload size is configurable at construction time. The default is 16 MB ({@value
+ * #DEFAULT_MAX_PAYLOAD_SIZE} bytes), which is suitable for most applications. For protocols with
+ * smaller messages, a lower limit reduces memory requirements and provides better protection
+ * against malformed length prefixes.
  *
  * <h2>Usage Example</h2>
  *
@@ -58,13 +58,13 @@ import java.util.Objects;
  * <h2>Thread Safety</h2>
  *
  * <p>This class is immutable and thread-safe. The same instance can be used concurrently by
- * multiple threads for framing and deframing operations. All configuration is fixed at
- * construction time.
+ * multiple threads for framing and deframing operations. All configuration is fixed at construction
+ * time.
  *
  * <h2>Zero-Copy Operation</h2>
  *
- * <p>This implementation uses {@link MemorySegment#copy(MemorySegment, long, MemorySegment, long, long)}
- * for efficient data transfer between segments. No intermediate buffers are allocated during
+ * <p>This implementation uses {@link MemorySegment#copy(MemorySegment, long, MemorySegment, long,
+ * long)} for efficient data transfer between segments. No intermediate buffers are allocated during
  * framing or deframing operations.
  *
  * @see FramingHandler
@@ -72,19 +72,13 @@ import java.util.Objects;
  */
 public final class LengthPrefixedFramingHandler implements FramingHandler {
 
-    /**
-     * The size of the length prefix header in bytes.
-     */
+    /** The size of the length prefix header in bytes. */
     public static final int HEADER_SIZE = 4;
 
-    /**
-     * The default maximum payload size: 16 MB.
-     */
+    /** The default maximum payload size: 16 MB. */
     public static final int DEFAULT_MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
 
-    /**
-     * Layout for reading/writing the 4-byte big-endian length prefix.
-     */
+    /** Layout for reading/writing the 4-byte big-endian length prefix. */
     private static final ValueLayout.OfInt LENGTH_LAYOUT =
             ValueLayout.JAVA_INT.withOrder(ByteOrder.BIG_ENDIAN);
 
@@ -103,12 +97,13 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
      * Creates a new length-prefixed framing handler with the specified maximum payload size.
      *
      * @param maxPayloadSize the maximum payload size in bytes
-     * @throws IllegalArgumentException if maxPayloadSize is not positive or exceeds
-     *         {@link Integer#MAX_VALUE} - {@link #HEADER_SIZE}
+     * @throws IllegalArgumentException if maxPayloadSize is not positive or exceeds {@link
+     *     Integer#MAX_VALUE} - {@link #HEADER_SIZE}
      */
     public LengthPrefixedFramingHandler(int maxPayloadSize) {
         if (maxPayloadSize <= 0) {
-            throw new IllegalArgumentException("maxPayloadSize must be positive: " + maxPayloadSize);
+            throw new IllegalArgumentException(
+                    "maxPayloadSize must be positive: " + maxPayloadSize);
         }
         // Ensure total frame size doesn't overflow
         if (maxPayloadSize > Integer.MAX_VALUE - HEADER_SIZE) {
@@ -121,8 +116,8 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation writes a 4-byte big-endian length prefix followed by the payload.
-     * The length prefix contains the payload size (not including the header itself).
+     * <p>This implementation writes a 4-byte big-endian length prefix followed by the payload. The
+     * length prefix contains the payload size (not including the header itself).
      *
      * @throws FramingException if sourceLength exceeds {@link #getMaxPayloadSize()}
      */
@@ -132,21 +127,25 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
         Objects.requireNonNull(destination, "destination must not be null");
 
         if (sourceLength < 0) {
-            throw new IllegalArgumentException("sourceLength must not be negative: " + sourceLength);
+            throw new IllegalArgumentException(
+                    "sourceLength must not be negative: " + sourceLength);
         }
 
         if (sourceLength > maxPayloadSize) {
-            throw new FramingException(String.format(
-                    "Payload size %d exceeds maximum allowed size %d", sourceLength, maxPayloadSize));
+            throw new FramingException(
+                    String.format(
+                            "Payload size %d exceeds maximum allowed size %d",
+                            sourceLength, maxPayloadSize));
         }
 
         int frameLength = HEADER_SIZE + sourceLength;
 
         // Check destination capacity
         if (destination.byteSize() < frameLength) {
-            throw new IndexOutOfBoundsException(String.format(
-                    "Destination capacity %d is insufficient for frame size %d",
-                    destination.byteSize(), frameLength));
+            throw new IndexOutOfBoundsException(
+                    String.format(
+                            "Destination capacity %d is insufficient for frame size %d",
+                            destination.byteSize(), frameLength));
         }
 
         // Write length prefix (big-endian)
@@ -167,8 +166,8 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
      * size, then copies the payload to the destination. Returns -1 if the source doesn't contain
      * enough bytes for the complete frame (header + indicated payload length).
      *
-     * @throws FramingException if the length prefix indicates a payload larger than
-     *         {@link #getMaxPayloadSize()} or is negative
+     * @throws FramingException if the length prefix indicates a payload larger than {@link
+     *     #getMaxPayloadSize()} or is negative
      */
     @Override
     public int deframeMessage(MemorySegment source, int sourceLength, MemorySegment destination) {
@@ -176,7 +175,8 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
         Objects.requireNonNull(destination, "destination must not be null");
 
         if (sourceLength < 0) {
-            throw new IllegalArgumentException("sourceLength must not be negative: " + sourceLength);
+            throw new IllegalArgumentException(
+                    "sourceLength must not be negative: " + sourceLength);
         }
 
         // Need at least the header to read the length
@@ -193,8 +193,10 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
         }
 
         if (payloadLength > maxPayloadSize) {
-            throw new FramingException(String.format(
-                    "Length prefix %d exceeds maximum allowed size %d", payloadLength, maxPayloadSize));
+            throw new FramingException(
+                    String.format(
+                            "Length prefix %d exceeds maximum allowed size %d",
+                            payloadLength, maxPayloadSize));
         }
 
         // Check if we have the complete frame
@@ -205,9 +207,10 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
 
         // Check destination capacity
         if (payloadLength > 0 && destination.byteSize() < payloadLength) {
-            throw new IndexOutOfBoundsException(String.format(
-                    "Destination capacity %d is insufficient for payload size %d",
-                    destination.byteSize(), payloadLength));
+            throw new IndexOutOfBoundsException(
+                    String.format(
+                            "Destination capacity %d is insufficient for payload size %d",
+                            destination.byteSize(), payloadLength));
         }
 
         // Copy payload to destination
@@ -228,9 +231,7 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
         return HEADER_SIZE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int getMaxPayloadSize() {
         return maxPayloadSize;
@@ -243,7 +244,8 @@ public final class LengthPrefixedFramingHandler implements FramingHandler {
      */
     @Override
     public String toString() {
-        return String.format("LengthPrefixedFramingHandler[headerSize=%d, maxPayloadSize=%d]",
+        return String.format(
+                "LengthPrefixedFramingHandler[headerSize=%d, maxPayloadSize=%d]",
                 HEADER_SIZE, maxPayloadSize);
     }
 }

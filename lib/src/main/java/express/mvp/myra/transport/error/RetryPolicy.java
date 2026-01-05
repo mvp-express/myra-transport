@@ -75,6 +75,7 @@ public final class RetryPolicy {
 
     /** Categories that should trigger retry. */
     private final boolean retryTransient;
+
     private final boolean retryNetwork;
     private final boolean retryResource;
     private final boolean retryUnknown;
@@ -114,8 +115,8 @@ public final class RetryPolicy {
         }
 
         // Check total duration
-        if (maxTotalDurationMillis > 0 &&
-            context.getElapsedTime().toMillis() >= maxTotalDurationMillis) {
+        if (maxTotalDurationMillis > 0
+                && context.getElapsedTime().toMillis() >= maxTotalDurationMillis) {
             return false;
         }
 
@@ -173,9 +174,7 @@ public final class RetryPolicy {
      * @return no-retry policy
      */
     public static RetryPolicy noRetry() {
-        return new Builder()
-                .maxAttempts(1)
-                .build();
+        return new Builder().maxAttempts(1).build();
     }
 
     /**
@@ -217,9 +216,7 @@ public final class RetryPolicy {
      * @return exponential backoff policy
      */
     public static RetryPolicy exponentialBackoff(
-            int maxAttempts,
-            Duration initialDelay,
-            Duration maxDelay) {
+            int maxAttempts, Duration initialDelay, Duration maxDelay) {
         return new Builder()
                 .maxAttempts(maxAttempts)
                 .initialDelay(initialDelay)
@@ -240,10 +237,7 @@ public final class RetryPolicy {
      * @return exponential backoff with jitter policy
      */
     public static RetryPolicy exponentialBackoffWithJitter(
-            int maxAttempts,
-            Duration initialDelay,
-            Duration maxDelay,
-            double jitterFactor) {
+            int maxAttempts, Duration initialDelay, Duration maxDelay, double jitterFactor) {
         return new Builder()
                 .maxAttempts(maxAttempts)
                 .initialDelay(initialDelay)
@@ -262,9 +256,7 @@ public final class RetryPolicy {
         return new Builder();
     }
 
-    /**
-     * Builder for {@link RetryPolicy}.
-     */
+    /** Builder for {@link RetryPolicy}. */
     public static final class Builder {
         private int maxAttempts = 3;
         private long initialDelayMillis = 100;

@@ -2,6 +2,7 @@ package express.mvp.myra.transport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import express.mvp.myra.transport.iouring.LibUring;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -14,6 +15,14 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+/** Smoke tests for io_uring buffer modes using a ping-pong exchange. */
+@SuppressFBWarnings(
+        value = {
+            "REC_CATCH_EXCEPTION",
+            "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION",
+            "UCF_USELESS_CONTROL_FLOW"
+        },
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class IoUringBufferModePingPongTest {
 
     private static final int PORT = 9877;
@@ -34,7 +43,8 @@ class IoUringBufferModePingPongTest {
     @Test
     @Timeout(10)
     void pingPong_bufferRing() throws Exception {
-        Assumptions.assumeTrue(LibUring.isBufferRingSupported(), "Buffer ring not supported by liburing");
+        Assumptions.assumeTrue(
+                LibUring.isBufferRingSupported(), "Buffer ring not supported by liburing");
         runPingPong(TransportConfig.BufferMode.BUFFER_RING);
     }
 
@@ -69,9 +79,10 @@ class IoUringBufferModePingPongTest {
                 new Thread(
                         () -> {
                             try (java.nio.channels.ServerSocketChannel serverSocket =
-                                            java.nio.channels.ServerSocketChannel.open()) {
+                                    java.nio.channels.ServerSocketChannel.open()) {
                                 serverSocket.bind(ADDRESS);
-                                try (java.nio.channels.SocketChannel socket = serverSocket.accept()) {
+                                try (java.nio.channels.SocketChannel socket =
+                                        serverSocket.accept()) {
                                     java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocate(1024);
                                     while (socket.read(buffer) != -1) {
                                         buffer.flip();

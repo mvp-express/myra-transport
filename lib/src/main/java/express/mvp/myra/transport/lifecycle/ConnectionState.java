@@ -26,8 +26,8 @@ package express.mvp.myra.transport.lifecycle;
  *                               │                      │      │
  *                               ▼                      ▼      │
  *                        ┌────────────────────────────────────┘
- *                        │                                    
- *                        ▼                                    
+ *                        │
+ *                        ▼
  *     ┌────────────┐  drain complete  ┌────────────┐
  *     │  CLOSING   │─────────────────▶│  CLOSED    │
  *     └────────────┘                  └────────────┘
@@ -52,6 +52,7 @@ public enum ConnectionState {
      * Initial state before any connection attempt.
      *
      * <p>Allowed transitions:
+     *
      * <ul>
      *   <li>{@link #CONNECTING} - when connect() is called
      *   <li>{@link #CLOSED} - if closed before connecting
@@ -62,8 +63,8 @@ public enum ConnectionState {
     /**
      * Connection attempt in progress.
      *
-     * <p>This state indicates an asynchronous connection operation is pending.
-     * The transition out of this state depends on the result:
+     * <p>This state indicates an asynchronous connection operation is pending. The transition out
+     * of this state depends on the result:
      *
      * <ul>
      *   <li>{@link #CONNECTED} - on success
@@ -79,6 +80,7 @@ public enum ConnectionState {
      * <p>In this state, send and receive operations can proceed.
      *
      * <p>Allowed transitions:
+     *
      * <ul>
      *   <li>{@link #CLOSING} - when close() is called
      *   <li>{@link #FAILED} - on I/O error (connection reset, etc.)
@@ -90,12 +92,14 @@ public enum ConnectionState {
      * Connection failed or was lost.
      *
      * <p>This state can be entered from:
+     *
      * <ul>
      *   <li>{@link #CONNECTING} - connection attempt failed
      *   <li>{@link #CONNECTED} - connection lost during operation
      * </ul>
      *
      * <p>Allowed transitions:
+     *
      * <ul>
      *   <li>{@link #CONNECTING} - on reconnect attempt
      *   <li>{@link #CLOSED} - if close() called or no retry
@@ -107,6 +111,7 @@ public enum ConnectionState {
      * Graceful close in progress.
      *
      * <p>During this state:
+     *
      * <ul>
      *   <li>No new operations are accepted
      *   <li>In-flight operations may complete
@@ -114,6 +119,7 @@ public enum ConnectionState {
      * </ul>
      *
      * <p>Allowed transitions:
+     *
      * <ul>
      *   <li>{@link #CLOSED} - when close completes
      * </ul>
@@ -123,8 +129,7 @@ public enum ConnectionState {
     /**
      * Terminal state - connection fully closed.
      *
-     * <p>No transitions are allowed from this state. The connection object
-     * cannot be reused.
+     * <p>No transitions are allowed from this state. The connection object cannot be reused.
      */
     CLOSED(5, "Closed", false, true);
 

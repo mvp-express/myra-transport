@@ -1,9 +1,8 @@
 package express.mvp.myra.transport.framing;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteOrder;
@@ -13,12 +12,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Comprehensive tests for {@link LengthPrefixedFramingHandler}.
- */
+/** Comprehensive tests for {@link LengthPrefixedFramingHandler}. */
+@SuppressFBWarnings(
+        value = {
+            "REC_CATCH_EXCEPTION",
+            "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
+            "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"
+        },
+        justification = "SpotBugs rules are intentionally relaxed for test scaffolding.")
 class LengthPrefixedFramingHandlerTest {
 
     private LengthPrefixedFramingHandler handler;
@@ -56,20 +61,19 @@ class LengthPrefixedFramingHandlerTest {
     @Test
     @DisplayName("Constructor rejects non-positive max payload size")
     void rejectsNonPositiveMaxSize() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new LengthPrefixedFramingHandler(0));
-        assertThrows(IllegalArgumentException.class,
-                () -> new LengthPrefixedFramingHandler(-1));
-        assertThrows(IllegalArgumentException.class,
-                () -> new LengthPrefixedFramingHandler(-100));
+        assertThrows(IllegalArgumentException.class, () -> new LengthPrefixedFramingHandler(0));
+        assertThrows(IllegalArgumentException.class, () -> new LengthPrefixedFramingHandler(-1));
+        assertThrows(IllegalArgumentException.class, () -> new LengthPrefixedFramingHandler(-100));
     }
 
     @Test
     @DisplayName("Constructor rejects max size that would overflow frame size")
     void rejectsOverflowingMaxSize() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> new LengthPrefixedFramingHandler(Integer.MAX_VALUE));
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> new LengthPrefixedFramingHandler(Integer.MAX_VALUE - 3));
     }
 
@@ -201,8 +205,8 @@ class LengthPrefixedFramingHandlerTest {
         MemorySegment output = arena.allocate(100);
 
         // Provide only header + partial payload
-        assertEquals(-1, handler.deframeMessage(frame, 4, output));   // 0 bytes of payload
-        assertEquals(-1, handler.deframeMessage(frame, 50, output));  // 46 bytes of payload
+        assertEquals(-1, handler.deframeMessage(frame, 4, output)); // 0 bytes of payload
+        assertEquals(-1, handler.deframeMessage(frame, 50, output)); // 46 bytes of payload
         assertEquals(-1, handler.deframeMessage(frame, 103, output)); // 99 bytes of payload
     }
 
@@ -247,8 +251,9 @@ class LengthPrefixedFramingHandlerTest {
         MemorySegment source = arena.allocate(maxSize + 1);
         MemorySegment frame = arena.allocate(maxSize + 10);
 
-        FramingException ex = assertThrows(FramingException.class,
-                () -> h.frameMessage(source, maxSize + 1, frame));
+        FramingException ex =
+                assertThrows(
+                        FramingException.class, () -> h.frameMessage(source, maxSize + 1, frame));
 
         assertTrue(ex.getMessage().contains("exceeds maximum"));
     }
@@ -261,12 +266,15 @@ class LengthPrefixedFramingHandlerTest {
 
         // Create frame with length prefix indicating oversized payload
         MemorySegment frame = arena.allocate(1000);
-        frame.set(java.lang.foreign.ValueLayout.JAVA_INT.withOrder(ByteOrder.BIG_ENDIAN), 0, maxSize + 1);
+        frame.set(
+                java.lang.foreign.ValueLayout.JAVA_INT.withOrder(ByteOrder.BIG_ENDIAN),
+                0,
+                maxSize + 1);
 
         MemorySegment output = arena.allocate(1000);
 
-        FramingException ex = assertThrows(FramingException.class,
-                () -> h.deframeMessage(frame, 1000, output));
+        FramingException ex =
+                assertThrows(FramingException.class, () -> h.deframeMessage(frame, 1000, output));
 
         assertTrue(ex.getMessage().contains("exceeds maximum"));
     }
@@ -275,13 +283,15 @@ class LengthPrefixedFramingHandlerTest {
     @DisplayName("Deframe rejects negative length prefix")
     void deframeRejectsNegativeLengthPrefix() {
         MemorySegment frame = arena.allocate(100);
-        // Write negative length (appears as large positive when read as unsigned, but we validate as signed)
+        // Write negative length (appears as large positive when read as unsigned, but we validate
+        // as signed)
         frame.set(java.lang.foreign.ValueLayout.JAVA_INT.withOrder(ByteOrder.BIG_ENDIAN), 0, -1);
 
         MemorySegment output = arena.allocate(100);
 
-        FramingException ex = assertThrows(FramingException.class,
-                () -> handler.deframeMessage(frame, 100, output));
+        FramingException ex =
+                assertThrows(
+                        FramingException.class, () -> handler.deframeMessage(frame, 100, output));
 
         assertTrue(ex.getMessage().contains("negative"));
     }
@@ -292,8 +302,7 @@ class LengthPrefixedFramingHandlerTest {
         MemorySegment source = arena.allocate(100);
         MemorySegment frame = arena.allocate(100);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> handler.frameMessage(source, -1, frame));
+        assertThrows(IllegalArgumentException.class, () -> handler.frameMessage(source, -1, frame));
     }
 
     @Test
@@ -302,8 +311,8 @@ class LengthPrefixedFramingHandlerTest {
         MemorySegment source = arena.allocate(100);
         MemorySegment output = arena.allocate(100);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> handler.deframeMessage(source, -1, output));
+        assertThrows(
+                IllegalArgumentException.class, () -> handler.deframeMessage(source, -1, output));
     }
 
     // ==================== Null Parameter Tests ====================
@@ -313,8 +322,7 @@ class LengthPrefixedFramingHandlerTest {
     void frameRejectsNullSource() {
         MemorySegment frame = arena.allocate(100);
 
-        assertThrows(NullPointerException.class,
-                () -> handler.frameMessage(null, 10, frame));
+        assertThrows(NullPointerException.class, () -> handler.frameMessage(null, 10, frame));
     }
 
     @Test
@@ -322,8 +330,7 @@ class LengthPrefixedFramingHandlerTest {
     void frameRejectsNullDestination() {
         MemorySegment source = arena.allocate(100);
 
-        assertThrows(NullPointerException.class,
-                () -> handler.frameMessage(source, 10, null));
+        assertThrows(NullPointerException.class, () -> handler.frameMessage(source, 10, null));
     }
 
     @Test
@@ -331,8 +338,7 @@ class LengthPrefixedFramingHandlerTest {
     void deframeRejectsNullSource() {
         MemorySegment output = arena.allocate(100);
 
-        assertThrows(NullPointerException.class,
-                () -> handler.deframeMessage(null, 10, output));
+        assertThrows(NullPointerException.class, () -> handler.deframeMessage(null, 10, output));
     }
 
     @Test
@@ -340,8 +346,7 @@ class LengthPrefixedFramingHandlerTest {
     void deframeRejectsNullDestination() {
         MemorySegment source = arena.allocate(100);
 
-        assertThrows(NullPointerException.class,
-                () -> handler.deframeMessage(source, 10, null));
+        assertThrows(NullPointerException.class, () -> handler.deframeMessage(source, 10, null));
     }
 
     // ==================== Buffer Capacity Tests ====================
@@ -353,7 +358,8 @@ class LengthPrefixedFramingHandlerTest {
         MemorySegment source = MemorySegment.ofArray(payload);
         MemorySegment frame = arena.allocate(payload.length); // Missing header space
 
-        assertThrows(IndexOutOfBoundsException.class,
+        assertThrows(
+                IndexOutOfBoundsException.class,
                 () -> handler.frameMessage(source, payload.length, frame));
     }
 
@@ -367,7 +373,8 @@ class LengthPrefixedFramingHandlerTest {
 
         MemorySegment output = arena.allocate(payload.length - 1); // Too small
 
-        assertThrows(IndexOutOfBoundsException.class,
+        assertThrows(
+                IndexOutOfBoundsException.class,
                 () -> handler.deframeMessage(frame, payload.length + 4, output));
     }
 
@@ -431,49 +438,62 @@ class LengthPrefixedFramingHandlerTest {
 
         for (int t = 0; t < threadCount; t++) {
             final int threadId = t;
-            executor.submit(() -> {
-                try (Arena threadArena = Arena.ofConfined()) {
-                    for (int i = 0; i < operationsPerThread; i++) {
-                        try {
-                            // Create unique payload for this operation
-                            String message = "Thread-" + threadId + "-Op-" + i;
-                            byte[] payload = message.getBytes(StandardCharsets.UTF_8);
+            executor.submit(
+                    () -> {
+                        try (Arena threadArena = Arena.ofConfined()) {
+                            for (int i = 0; i < operationsPerThread; i++) {
+                                try {
+                                    // Create unique payload for this operation
+                                    String message = "Thread-" + threadId + "-Op-" + i;
+                                    byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
-                            MemorySegment source = MemorySegment.ofArray(payload);
-                            MemorySegment frame = threadArena.allocate(payload.length + 4);
-                            MemorySegment output = threadArena.allocate(payload.length);
+                                    MemorySegment source = MemorySegment.ofArray(payload);
+                                    MemorySegment frame = threadArena.allocate(payload.length + 4);
+                                    MemorySegment output = threadArena.allocate(payload.length);
 
-                            // Frame and deframe
-                            int frameLength = sharedHandler.frameMessage(source, payload.length, frame);
-                            int payloadLength = sharedHandler.deframeMessage(frame, frameLength, output);
+                                    // Frame and deframe
+                                    int frameLength =
+                                            sharedHandler.frameMessage(
+                                                    source, payload.length, frame);
+                                    int payloadLength =
+                                            sharedHandler.deframeMessage(
+                                                    frame, frameLength, output);
 
-                            // Verify
-                            if (payloadLength == payload.length) {
-                                byte[] result = new byte[payloadLength];
-                                MemorySegment.copy(output, 0, MemorySegment.ofArray(result), 0, payloadLength);
-                                if (new String(result, StandardCharsets.UTF_8).equals(message)) {
-                                    successCount.incrementAndGet();
-                                } else {
+                                    // Verify
+                                    if (payloadLength == payload.length) {
+                                        byte[] result = new byte[payloadLength];
+                                        MemorySegment.copy(
+                                                output,
+                                                0,
+                                                MemorySegment.ofArray(result),
+                                                0,
+                                                payloadLength);
+                                        if (new String(result, StandardCharsets.UTF_8)
+                                                .equals(message)) {
+                                            successCount.incrementAndGet();
+                                        } else {
+                                            errorCount.incrementAndGet();
+                                        }
+                                    } else {
+                                        errorCount.incrementAndGet();
+                                    }
+                                } catch (Exception e) {
                                     errorCount.incrementAndGet();
                                 }
-                            } else {
-                                errorCount.incrementAndGet();
                             }
-                        } catch (Exception e) {
-                            errorCount.incrementAndGet();
+                        } finally {
+                            latch.countDown();
                         }
-                    }
-                } finally {
-                    latch.countDown();
-                }
-            });
+                    });
         }
 
         assertTrue(latch.await(30, TimeUnit.SECONDS), "Timed out waiting for threads");
         executor.shutdown();
 
         assertEquals(0, errorCount.get(), "Should have no errors");
-        assertEquals(threadCount * operationsPerThread, successCount.get(),
+        assertEquals(
+                threadCount * operationsPerThread,
+                successCount.get(),
                 "All operations should succeed");
     }
 
