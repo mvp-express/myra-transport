@@ -25,7 +25,8 @@ import express.mvp.myra.transport.TransportBackend;
  *
  * <p>The buffer passed to {@link #onDataReceived} is owned by the server's buffer pool. The handler
  * may read from the buffer and optionally use it for a response, but must not hold references
- * beyond the callback scope unless explicitly acquired from the pool.
+ * beyond the callback scope unless explicitly acquired from the pool. Connections may implement
+ * {@link RegisteredBufferProvider} to allow handlers to acquire additional response buffers.
  *
  * <h2>Thread Safety</h2>
  *

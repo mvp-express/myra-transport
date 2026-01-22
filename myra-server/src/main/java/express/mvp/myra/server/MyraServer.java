@@ -298,7 +298,7 @@ public class MyraServer implements AutoCloseable {
     private void initializeBackend() {
         TransportConfig transportConfig =
                 TransportConfig.builder()
-                        .backendType(TransportConfig.BackendType.IO_URING)
+                        .backendType(config.getBackendType())
                         .registeredBuffers(
                                 TransportConfig.RegisteredBuffersConfig.builder()
                                         .enabled(true)
@@ -337,7 +337,7 @@ public class MyraServer implements AutoCloseable {
             clientBackend.registerBufferPool(bufferPool);
 
             // Track the connection
-            ConnectionContext ctx = new ConnectionContext(clientBackend);
+            ConnectionContext ctx = new ConnectionContext(clientBackend, bufferPool);
             connections.add(ctx);
 
             // Notify handler
@@ -460,6 +460,9 @@ public class MyraServer implements AutoCloseable {
         /** Current buffer being used for read operations. */
         RegisteredBuffer currentReadBuffer;
 
+        /** Pool for acquiring additional response buffers. */
+        final RegisteredBufferPool bufferPool;
+
         /** Generator for request IDs. */
         long reqIdGen = 0;
 
@@ -477,9 +480,10 @@ public class MyraServer implements AutoCloseable {
          *
          * @param backend the transport backend for this connection
          */
-        ConnectionContext(TransportBackend backend) {
+        ConnectionContext(TransportBackend backend, RegisteredBufferPool bufferPool) {
             this.id = ID_GEN.incrementAndGet();
             this.backend = backend;
+            this.bufferPool = bufferPool;
             this.wrapper = new TransportBackendWrapper(backend, this);
         }
     }
@@ -490,7 +494,8 @@ public class MyraServer implements AutoCloseable {
      * <p>This wrapper intercepts send operations to encode proper tokens and track pending write
      * buffers for cleanup.
      */
-    private static class TransportBackendWrapper implements TransportBackend {
+    private static class TransportBackendWrapper
+            implements TransportBackend, RegisteredBufferProvider {
         private final TransportBackend delegate;
         private final ConnectionContext ctx;
 
@@ -515,6 +520,16 @@ public class MyraServer implements AutoCloseable {
         @Override
         public void send(MemorySegment data, int length, long token) {
             delegate.send(data, length, token);
+        }
+
+        @Override
+        public RegisteredBuffer acquireBuffer() {
+            return ctx.bufferPool.acquire();
+        }
+
+        @Override
+        public RegisteredBuffer tryAcquireBuffer() {
+            return ctx.bufferPool.tryAcquire();
         }
 
         // ─────────────────────────────────────────────────────────────────────

@@ -1,5 +1,7 @@
 package express.mvp.myra.server;
 
+import express.mvp.myra.transport.TransportConfig;
+
 /**
  * Configuration for a MyraServer instance.
  *
@@ -60,6 +62,9 @@ public class MyraServerConfig {
     /** Size of each buffer in bytes. */
     private final int bufferSize;
 
+    /** Transport backend type (io_uring or NIO). */
+    private final TransportConfig.BackendType backendType;
+
     /** CPU core to pin the server thread to (-1 for no affinity). */
     private final int cpuAffinity;
 
@@ -82,6 +87,7 @@ public class MyraServerConfig {
         this.port = builder.port;
         this.numBuffers = builder.numBuffers;
         this.bufferSize = builder.bufferSize;
+        this.backendType = builder.backendType;
         this.cpuAffinity = builder.cpuAffinity;
         this.sqPollCpuAffinity = builder.sqPollCpuAffinity;
         this.sqPollEnabled = builder.sqPollEnabled;
@@ -129,6 +135,15 @@ public class MyraServerConfig {
      */
     public int getBufferSize() {
         return bufferSize;
+    }
+
+    /**
+     * Returns the transport backend type to use.
+     *
+     * @return the backend type (io_uring or NIO)
+     */
+    public TransportConfig.BackendType getBackendType() {
+        return backendType;
     }
 
     /**
@@ -199,22 +214,24 @@ public class MyraServerConfig {
      *
      * <h2>Default Values</h2>
      *
-     * <ul>
-     *   <li>host: "0.0.0.0" (all interfaces)
-     *   <li>port: 8080
-     *   <li>numBuffers: 1024
-     *   <li>bufferSize: 4096 bytes
-     *   <li>cpuAffinity: -1 (no affinity)
-     *   <li>sqPollCpuAffinity: -1 (no affinity)
-     *   <li>sqPollEnabled: false
-     *   <li>sqPollIdleTimeout: 2000 microseconds
-     * </ul>
+ * <ul>
+ *   <li>host: "0.0.0.0" (all interfaces)
+ *   <li>port: 8080
+ *   <li>numBuffers: 1024
+ *   <li>bufferSize: 4096 bytes
+ *   <li>backendType: IO_URING
+ *   <li>cpuAffinity: -1 (no affinity)
+ *   <li>sqPollCpuAffinity: -1 (no affinity)
+ *   <li>sqPollEnabled: false
+ *   <li>sqPollIdleTimeout: 2000 microseconds
+ * </ul>
      */
     public static class Builder {
         private String host = "0.0.0.0";
         private int port = 8080;
         private int numBuffers = 1024;
         private int bufferSize = 4096;
+        private TransportConfig.BackendType backendType = TransportConfig.BackendType.IO_URING;
         private int cpuAffinity = -1;
         private int sqPollCpuAffinity = -1;
         private boolean sqPollEnabled = false;
@@ -261,6 +278,17 @@ public class MyraServerConfig {
          */
         public Builder bufferSize(int bufferSize) {
             this.bufferSize = bufferSize;
+            return this;
+        }
+
+        /**
+         * Sets the transport backend type.
+         *
+         * @param backendType the backend type to use
+         * @return this builder
+         */
+        public Builder backendType(TransportConfig.BackendType backendType) {
+            this.backendType = backendType;
             return this;
         }
 

@@ -6,7 +6,7 @@ plugins {
 // Configure Javadoc for each subproject
 subprojects {
     group = "express.mvp.myra.transport"
-    version = "0.1.0"
+    version = "0.2.0"
 
     plugins.withType<JavaPlugin> {
         tasks.withType<Javadoc>().configureEach {

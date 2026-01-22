@@ -17,7 +17,7 @@ LOG_FILE_RW="$LOG_DIR/standard-realworld-1m-5m-$TS.log"
 RESULT_RW_NETTY_NIO="$OUT_DIR/standard-realworld-1m-5m-$TS-nio-netty.json"
 RESULT_RW_MYRA="$OUT_DIR/standard-realworld-1m-5m-$TS-myra.json"
 
-JAR="$ROOT/benchmarks/build/libs/benchmarks-0.1.0-SNAPSHOT-jmh.jar"
+JAR="$ROOT/benchmarks/build/libs/benchmarks-0.2.0-jmh.jar"
 
 kill_running_jmh() {
   # Be conservative: only kill JVMs that are running our JMH jar.

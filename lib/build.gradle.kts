@@ -64,7 +64,7 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 
 dependencies {
     // roray-ffm-utils for FFM utilities (DowncallFactory, LinuxLayouts, etc.)
-    implementation("express.mvp:roray-ffm:0.1.0")
+    implementation("express.mvp:roray-ffm:0.2.0")
     
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
