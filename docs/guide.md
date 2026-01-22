@@ -6,8 +6,8 @@
 
 ```gradle
 dependencies {
-    implementation("express.mvp.myra.transport:myra-transport:0.2.0")
-    implementation(files("libs/roray-ffm-utils-0.2.0.jar"))
+    implementation("express.mvp.myra.transport:myra-transport:0.2.1")
+    implementation(files("libs/roray-ffm-utils-0.2.1.jar"))
 }
 ```
 

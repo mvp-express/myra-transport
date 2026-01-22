@@ -9,7 +9,7 @@
 
 ```kotlin
 dependencies {
-    implementation("express.mvp.myra.transport:myra-transport:0.2.0")
+    implementation("express.mvp.myra.transport:myra-transport:0.2.1")
 }
 ```
 
