@@ -47,8 +47,8 @@ server.start();
 ## Documentation
 
 📚 **[User Guide](https://mvp.express/docs/myra-transport/)** — Full documentation  
-🚀 **[Getting Started](https://mvp.express/docs/getting-started/)** — Ecosystem tutorial  
-📖 **[API Reference](https://mvp.express/docs/myra-transport/api/)** — Javadoc  
+🚀 **[Getting Started](https://mvp.express/docs/quick-start-guide/)** — Ecosystem tutorial  
+📖 **[API Reference](https://mvp.express/myra-transport/api/latest/)** — Javadoc  
 📊 **[Benchmarks](https://mvp.express/benchmarks/)** — Performance analysis
 
 ## For Contributors
