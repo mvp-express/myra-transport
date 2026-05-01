@@ -10,6 +10,10 @@ repositories {
     mavenCentral()
 }
 
+base {
+    archivesName.set("myra-transport-runtime")
+}
+
 // Spotless configuration for Google Java Format
 spotless {
     java {

@@ -285,6 +285,7 @@ public class MyraServer implements AutoCloseable {
                     System.err.println("MyraServer: submitBatch failed in loop: " + submitted);
                 }
                 int count = serverBackend.poll(completionHandler);
+                count += pollConnections(completionHandler);
                 if (count == 0) {
                     Thread.onSpinWait(); // Busy spin for lowest latency
                 }
@@ -355,6 +356,22 @@ public class MyraServer implements AutoCloseable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private int pollConnections(CompletionHandler completionHandler) {
+        int count = 0;
+        for (int i = 0; i < connections.size(); i++) {
+            ConnectionContext ctx = connections.get(i);
+            int submitted = ctx.backend.submitBatch();
+            if (submitted < 0) {
+                System.err.println("MyraServer: client submitBatch failed: " + submitted);
+            }
+            count += ctx.backend.poll(completionHandler);
+            if (i < connections.size() && connections.get(i) != ctx) {
+                i--;
+            }
+        }
+        return count;
     }
 
     /**
@@ -430,6 +447,7 @@ public class MyraServer implements AutoCloseable {
      */
     private void closeConnection(ConnectionContext ctx) {
         handler.onDisconnect(ctx.wrapper);
+        connections.remove(ctx);
         try {
             ctx.backend.close();
         } catch (Exception e) {
