@@ -196,8 +196,8 @@ public final class TransportConfig {
     /**
      * Returns the SQPOLL idle timeout in microseconds.
      *
-     * <p>After this duration with no submissions, the kernel thread enters a sleep state to
-     * reduce CPU usage during idle periods.
+     * <p>After this duration with no submissions, the kernel thread enters a sleep state to reduce
+     * CPU usage during idle periods.
      *
      * @return the idle timeout in microseconds
      */

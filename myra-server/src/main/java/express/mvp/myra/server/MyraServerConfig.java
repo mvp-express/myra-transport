@@ -214,17 +214,17 @@ public class MyraServerConfig {
      *
      * <h2>Default Values</h2>
      *
- * <ul>
- *   <li>host: "0.0.0.0" (all interfaces)
- *   <li>port: 8080
- *   <li>numBuffers: 1024
- *   <li>bufferSize: 4096 bytes
- *   <li>backendType: IO_URING
- *   <li>cpuAffinity: -1 (no affinity)
- *   <li>sqPollCpuAffinity: -1 (no affinity)
- *   <li>sqPollEnabled: false
- *   <li>sqPollIdleTimeout: 2000 microseconds
- * </ul>
+     * <ul>
+     *   <li>host: "0.0.0.0" (all interfaces)
+     *   <li>port: 8080
+     *   <li>numBuffers: 1024
+     *   <li>bufferSize: 4096 bytes
+     *   <li>backendType: IO_URING
+     *   <li>cpuAffinity: -1 (no affinity)
+     *   <li>sqPollCpuAffinity: -1 (no affinity)
+     *   <li>sqPollEnabled: false
+     *   <li>sqPollIdleTimeout: 2000 microseconds
+     * </ul>
      */
     public static class Builder {
         private String host = "0.0.0.0";
